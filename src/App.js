@@ -11,6 +11,9 @@ import Cookie from "js-cookie";
 import {fetchUser} from "./store/slices/auth";
 import {CssBaseline, ThemeProvider} from "@mui/material";
 import theme from "./themes";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 function App() {
 
@@ -37,6 +40,9 @@ function App() {
     return (
         <ThemeProvider theme={themes}>
             <CssBaseline/>
+            <ToastContainer position={"top-left"} autoClose={5000}
+            hideProgressBar={true}
+            />
             <BrowserRouter>
                 <Routes>
                     <Route path={'/auth/login'} element={<Login/>}/>
