@@ -107,8 +107,8 @@ export default function componentStyleOverrides(theme) {
                     '& .MuiOutlinedInput-notchedOutline': {
                         borderColor: theme.colors?.grey[400]
                     },
-                    '&:hover $notchedOutline': {
-                        borderColor: theme.colors?.primary.light
+                    '&:hover notchedOutline': {
+                        borderColor: theme.colors?.primary.main,
                     },
                     '&.MuiInputBase-multiline': {
                         padding: 1
@@ -134,6 +134,7 @@ export default function componentStyleOverrides(theme) {
                 }
             }
         },
+
         MuiSlider: {
             styleOverrides: {
                 root: {
