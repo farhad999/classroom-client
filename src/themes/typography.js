@@ -67,7 +67,7 @@ export default function themeTypography(theme) {
             '& > label': {
                 top: 23,
                 left: 0,
-                color: theme.grey500,
+                color: theme.colors.grey[500],
                 '&[data-shrink="false"]': {
                     top: 5
                 }
@@ -90,7 +90,6 @@ export default function themeTypography(theme) {
             padding: '20px',
             marginTop: '88px',
             marginRight: '20px',
-            borderRadius: `${theme?.customization?.borderRadius}px`
         },
         menuCaption: {
             fontSize: '0.875rem',
