@@ -4,7 +4,7 @@ import axios from "axios";
 
 const initialState = {
     user: '',
-    loading: false,
+    loading: true,
     loginMessage: '',
 }
 

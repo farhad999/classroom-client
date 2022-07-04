@@ -3,7 +3,6 @@ import './main.css'
 import React from "react";
 import {BrowserRouter, Route, Routes} from "react-router-dom";
 import Login from "./pages/auth/Login";
-import Home from "./pages/Home";
 import axios from "axios";
 import {useDispatch, useSelector} from "react-redux";
 import Cookie from "js-cookie";
@@ -12,13 +11,17 @@ import {CircularProgress, CssBaseline, ThemeProvider} from "@mui/material";
 import theme from "./themes";
 import {ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import HomeLayout from "./layouts/HomeLayout";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
 
     axios.defaults.baseURL = 'http://localhost:5000/api/v1/';
     axios.defaults.headers['accept'] = 'application/json';
 
+    //let login token
+
+    let loginToken = Cookie.get('loginToken');
 
     let {loading} = useSelector(state => state.auth);
 
@@ -30,10 +33,6 @@ function App() {
 
     React.useEffect(() => {
 
-        //let login token
-
-        let loginToken = Cookie.get('loginToken');
-
         axios.defaults.headers['authorization'] = 'Bearer ' + loginToken;
 
         if (loginToken) {
@@ -41,8 +40,8 @@ function App() {
         }
     }, []);
 
-    if (loading) {
-        return <CircularProgress />
+    if (loading && loginToken) {
+        return <CircularProgress/>
     }
 
     return (
@@ -54,7 +53,9 @@ function App() {
             <BrowserRouter>
                 <Routes>
                     <Route path={'/auth/login'} element={<Login/>}/>
-                    <Route path={'/'} element={<Home/>}/>
+                    <Route path={'/'} element={<HomeLayout/>}>
+                        <Route path={'/'} element={<Dashboard/>}/>
+                    </Route>
                 </Routes>
             </BrowserRouter>
         </ThemeProvider>
