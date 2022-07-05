@@ -15,6 +15,7 @@ import HomeLayout from "./layouts/HomeLayout";
 import Dashboard from "./pages/Dashboard";
 import Users from "./pages/Users";
 import Courses from "./pages/Courses";
+import Routines from "./pages/routine/Routines";
 
 function App() {
 
@@ -58,6 +59,7 @@ function App() {
                     <Route path={'/'} element={<HomeLayout/>}>
                         <Route path={'/users/:type'} element={<Users/>}/>
                         <Route path={'/courses'} element={<Courses />} />
+                        <Route path={'/routines'} element={<Routines />} />
                         <Route path={'/'} element={<Dashboard/>}/>
                     </Route>
                 </Routes>

@@ -29,5 +29,9 @@ export const menuItems = [
         id: 'courses',
         title: 'Courses',
         url: '/courses'
+    }, {
+        id: 'routine',
+        title: 'Routine',
+        url: '/routines'
     }
 ]
