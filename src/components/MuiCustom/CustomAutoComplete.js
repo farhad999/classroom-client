@@ -1,19 +1,33 @@
 import React from 'react'
 import {Autocomplete, CircularProgress, TextField} from "@mui/material";
 import PropTypes from "prop-types";
+import axios from "axios";
 
-function CustomAutoComplete({loading, options, onInput, label}) {
+function CustomAutoComplete({url, value, setValue, onSelect, inputLabel, setOptionLabel}) {
 
     const [open, setOpen] = React.useState(false);
 
-    const onChange = (event, value) => {
-      console.log('event', value);
+    let [options, setOptions] = React.useState([]);
+
+    let [loading, setLoading] = React.useState(false);
+
+    const onInputChange = async (input) => {
+        setLoading(true);
+        let res = await axios.get(url + input);
+        let {data} = res.data;
+        setOptions(data);
+        setLoading(false);
+    }
+
+    const onItemSelect = (v) => {
+        //if value not undefined then control the input
+        value && setValue(v);
+        onSelect(v);
     }
 
     return (
         <Autocomplete
             fullWidth={true}
-            autoComplete={false}
             open={open}
             onOpen={() => {
                 setOpen(true);
@@ -21,18 +35,18 @@ function CustomAutoComplete({loading, options, onInput, label}) {
             onClose={() => {
                 setOpen(false);
             }}
-            isOptionEqualToValue={(option, value) =>  option.id === value.id}
-            getOptionLabel={(option) => option.name}
+            value={value}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            getOptionLabel={setOptionLabel}
             options={options}
             loading={loading}
-            value={null}
-            onChange={onChange}
+            onChange={(event, value) => onItemSelect(value)}
             renderInput={(params) => (
                 <TextField
                     {...params}
                     fullWidth={true}
-                    onChange={(event) => onInput(event.target.value)}
-                    label="Asynchronous"
+                    onChange={(event) => onInputChange(event.target.value)}
+                    label={inputLabel}
                     InputProps={{
                         ...params.InputProps,
                         endAdornment: (
@@ -51,8 +65,10 @@ function CustomAutoComplete({loading, options, onInput, label}) {
 }
 
 CustomAutoComplete.protoTypes = {
-    loading: PropTypes.bool,
-    options: PropTypes.array
+    url: PropTypes.string.isRequired,
+    onSelect: PropTypes.func,
+    inputLabel: PropTypes.string,
+    setOptionLabel: PropTypes.func.isRequired,
 }
 
 export default CustomAutoComplete;
