@@ -14,6 +14,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import HomeLayout from "./layouts/HomeLayout";
 import Dashboard from "./pages/Dashboard";
 import Users from "./pages/Users";
+import Courses from "./pages/Courses";
 
 function App() {
 
@@ -56,6 +57,7 @@ function App() {
                     <Route path={'/auth/login'} element={<Login/>}/>
                     <Route path={'/'} element={<HomeLayout/>}>
                         <Route path={'/users/:type'} element={<Users/>}/>
+                        <Route path={'/courses'} element={<Courses />} />
                         <Route path={'/'} element={<Dashboard/>}/>
                     </Route>
                 </Routes>
