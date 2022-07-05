@@ -13,6 +13,7 @@ import {ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import HomeLayout from "./layouts/HomeLayout";
 import Dashboard from "./pages/Dashboard";
+import Users from "./pages/Users";
 
 function App() {
 
@@ -54,6 +55,7 @@ function App() {
                 <Routes>
                     <Route path={'/auth/login'} element={<Login/>}/>
                     <Route path={'/'} element={<HomeLayout/>}>
+                        <Route path={'/users/:type'} element={<Users/>}/>
                         <Route path={'/'} element={<Dashboard/>}/>
                     </Route>
                 </Routes>

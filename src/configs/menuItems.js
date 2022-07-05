@@ -1,4 +1,4 @@
-import {Window} from "@mui/icons-material";
+import {Window, Person} from "@mui/icons-material";
 
 export const menuItems = [
     {
@@ -6,5 +6,24 @@ export const menuItems = [
         title: 'Dashboard',
         url: '/',
         icon: <Window />
-    },
+    },{
+        id: 'users',
+        title: "Users",
+        icon: <Person />,
+        children: [
+            {
+                id: 'users-student',
+                title: 'Students',
+                url: '/users/student'
+            },{
+                id: 'users-teacher',
+                title: 'Teachers',
+                url: '/users/teacher'
+            },{
+                id: 'users-stuff',
+                title: 'Stuffs',
+                url: '/users/stuff'
+            }
+        ]
+    }
 ]
