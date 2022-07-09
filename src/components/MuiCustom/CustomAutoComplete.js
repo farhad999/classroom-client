@@ -3,7 +3,7 @@ import {Autocomplete, CircularProgress, TextField} from "@mui/material";
 import PropTypes from "prop-types";
 import axios from "axios";
 
-function CustomAutoComplete({url, value, setValue, onSelect, inputLabel, setOptionLabel}) {
+function CustomAutoComplete({url, value, onSelect, inputLabel, setOptionLabel}) {
 
     const [open, setOpen] = React.useState(false);
 
@@ -21,7 +21,7 @@ function CustomAutoComplete({url, value, setValue, onSelect, inputLabel, setOpti
 
     const onItemSelect = (v) => {
         //if value not undefined then control the input
-        value && setValue(v);
+        //value && setValue(v);
         onSelect(v);
     }
 
