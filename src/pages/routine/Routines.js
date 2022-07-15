@@ -5,20 +5,24 @@ import axios from "axios";
 import {toast} from "react-toastify";
 import {useNavigate} from 'react-router-dom'
 import {
+    Avatar, Badge,
     Box,
     Button,
     Card,
     CardActions,
-    CardContent,
+    CardContent, CardHeader,
     Dialog,
     DialogContent, FormControl, FormHelperText,
-    Grid, IconButton, InputLabel, MenuItem, OutlinedInput, Select,
-    Stack,
+    Grid, IconButton, InputLabel, ListItemIcon, Menu, MenuItem, OutlinedInput, Select,
+    Stack, TextField,
     Typography
 } from "@mui/material";
 import {Link} from 'react-router-dom'
-import {Edit} from '@mui/icons-material'
+import {Delete, Edit, MoreHoriz, PersonAdd, Settings, Sync} from '@mui/icons-material'
 import {CustomDialogTitle} from "../../components/MuiCustom/CustomDialogTitle";
+import {LocalizationProvider} from '@mui/x-date-pickers/LocalizationProvider';
+import {DesktopTimePicker, MobileTimePicker} from "@mui/x-date-pickers";
+import {AdapterMoment} from '@mui/x-date-pickers/AdapterMoment'
 
 export default function Routines() {
 
@@ -28,21 +32,30 @@ export default function Routines() {
 
     const [routines, setRoutines] = React.useState([]);
 
+    //routine context menu
+
+    const [anchorEl, setAnchorEl] = React.useState(null);
+
+
     //form
 
-    const {register, handleSubmit, control, reset, getValues, formState: {errors}} = useForm();
+    const {handleSubmit, control, reset, formState: {errors}} = useForm({
+        defaultValues: {
+            name: moment().format('MMMM-YYYY'),
+            status: '',
+            startTime: null,
+            periodLength: '',
+            isActive: false,
+        }
+    });
 
     //options
 
-    const [selectedStatus, setSelectedStatus] = React.useState('');
-
     //selected
 
-    const [selectedId, setSelectedId] = React.useState(null);
+    const [selectedRoutine, setSelectedRoutine] = React.useState(null);
 
     //route
-
-    let navigate = useNavigate();
 
     const options = [{
         name: 'Draft',
@@ -67,18 +80,33 @@ export default function Routines() {
 
     }, []);
 
+    const open = Boolean(anchorEl);
+    const handleClick = (event, routine) => {
+        setSelectedRoutine(routine);
+        setAnchorEl(event.currentTarget);
+    };
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
     const addOrUpdate = (data) => {
 
         console.log('data', data);
 
-        if (selectedId) {
-            axios.put(`routines/${selectedId}`, data)
+        data.startTime = moment(data.startTime).format('HH:mm:ss');
+
+        //let data for update
+
+        let {periodLength, ...rest} = data;
+
+        if (selectedRoutine) {
+            axios.put(`routines/${selectedRoutine.id}`, rest)
                 .then(res => {
                     let {status} = res.data;
                     if (status === 'success') {
                         toast.success('Routine Updated');
                         let r = [...routines];
-                        let index = r.findIndex(item => item.id === selectedId);
+                        let index = r.findIndex(item => item.id === selectedRoutine.id);
 
                         r[index] = {...r[index], ...data};
 
@@ -103,23 +131,34 @@ export default function Routines() {
         }
     }
 
+    const activateOrDeactivate = () => {
+        axios.put(`routines/${selectedRoutine.id}/activate-deactivate`)
+            .then(res => {
+                let {status, message} = res.data;
+                if (status === 'success') {
+                    toast(message);
+                    fetchData();
+                } else if (status === 'failed') {
+                    toast.error(message);
+                }
+            }).catch(er => console.log(er))
+    }
+
     //data table
 
 
     const openAddModal = () => {
-        reset({
-            name: moment().format('MMMM-YYYY'),
-        });
-        setSelectedStatus("");
+        reset({});
         setShowModal(true);
+        setSelectedRoutine(null);
     }
 
-    const selectAndOpenModal = (item) => {
-        let {name, status} = item;
-        setSelectedId(item.id);
-        setSelectedStatus(status);
-        reset({name});
+    const selectAndOpenModal = () => {
+        let item = routines.find(item => item.id === selectedRoutine.id);
+        let {name, status, periodLength, startTime} = item;
+        reset({name, status, periodLength, startTime: moment(startTime, 'HH:mm:ss')});
         setShowModal(true);
+
     }
 
     if (loading) {
@@ -143,29 +182,45 @@ export default function Routines() {
             <Grid container spacing={2}>
                 {
                     routines.map((routine, index) => (
-                        <Grid xs={6} sm={4} md={3} item key={index}>
+                        <Grid xs={12} sm={6} md={4} item key={index}>
 
                             <Card>
 
-                                <CardContent>
-                                    <Stack direction={'row'}
-                                           justifyContent={'space-between'}
-                                           alignItems={'center'}
-                                    >
-                                        <Typography sx={{fontSize: 14}} color="text.secondary" gutterBottom>
-                                            {routine.name}
-                                        </Typography>
-                                        <IconButton onClick={() => selectAndOpenModal(routine)}>
-                                            <Edit fontSize={'small'}/>
-                                        </IconButton>
+                                <CardHeader title={routine.name}
+                                            action={<IconButton onClick={(event) => handleClick(event, routine)}>
+                                                <MoreHoriz sx={{bgcolor: 'pallete.grey[100]'}} fontSize={'small'}/>
+                                            </IconButton>}
+                                />
 
-                                    </Stack>
-                                    <Typography textTransform={'capitalize'}>{routine.status}</Typography>
+                                <CardContent>
+
+                                    <Box sx={{display: 'flex', justifyContent: 'center', alignItems: 'center', mb: 2}}>
+                                        <Badge color={'primary'} badgeContent={routine.isActive && 'Active'}></Badge>
+                                    </Box>
+
+                                    <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
+                                        <Typography variant={'h5'}>Status</Typography>
+                                        <Typography variant={'h6'}
+                                                    textTransform={'capitalize'}>{routine.status}</Typography>
+                                    </Box>
+
+                                    <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
+                                        <Typography variant={'h5'}>Period Length</Typography>
+                                        <Typography variant={'h6'}
+                                                    textTransform={'capitalize'}>{routine.periodLength} Minutes</Typography>
+                                    </Box>
+
+                                    <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
+                                        <Typography variant={'h5'}>Start Time</Typography>
+                                        <Typography variant={'h6'}
+                                                    textTransform={'capitalize'}>{routine.startTime}</Typography>
+                                    </Box>
 
                                 </CardContent>
 
                                 <CardActions sx={{p: 2}}>
-                                    <Button component={Link} to={`/routines/${routine.id}`} fullWidth={true} variant={'outlined'} size={'small'}>View</Button>
+                                    <Button component={Link} to={`/routines/${routine.id}`} fullWidth={true}
+                                            variant={'outlined'} size={'small'}>View</Button>
                                 </CardActions>
 
                             </Card>
@@ -176,72 +231,145 @@ export default function Routines() {
 
             </Grid>
 
-            <Dialog open={showModal} onClose={() => setShowModal(false)}
-                    maxWidth={'xs'}
-                    fullWidth={true}
-            >
 
-                <CustomDialogTitle onClose={()=>setShowModal(false)}>
-                    <Typography variant={'h4'}>Add/Update Routine</Typography>
-                </CustomDialogTitle>
+            <LocalizationProvider dateAdapter={AdapterMoment}>
 
-                <DialogContent>
+                <Dialog open={showModal} onClose={() => setShowModal(false)}
+                        maxWidth={'xs'}
+                        fullWidth={true}
+                >
+
+                    <CustomDialogTitle onClose={() => setShowModal(false)}>
+                        <Typography variant={'h4'}>Add/Update Routine</Typography>
+                    </CustomDialogTitle>
+
+                    <DialogContent>
 
 
-                    <form onSubmit={handleSubmit(addOrUpdate)}>
+                        <form onSubmit={handleSubmit(addOrUpdate)}>
 
-                        <FormControl fullWidth margin={'normal'}>
-                            <InputLabel>Routine Name*</InputLabel>
-                            <OutlinedInput
-                                {...register('name')}
-                                type="text"
-                                name="routineName"
-                                label="Routine Name*"
+                            <Controller render={({field: {value, onChange}}) => (
+                                <FormControl fullWidth margin={'normal'}>
+                                    <InputLabel>Routine Name*</InputLabel>
+                                    <OutlinedInput
+                                        type="text"
+                                        name="routineName"
+                                        label="Routine Name*"
+                                        value={value}
+                                        onChange={(event) => onChange(event.target.value)}
+                                    />
+                                    <FormHelperText error={!!errors?.name}>
+                                        {errors.name?.message}
+                                    </FormHelperText>
+                                </FormControl>
+                            )} name={'name'} control={control}/>
+
+
+                            <Controller render={({field: {value, onChange}}) => (
+                                <FormControl fullWidth
+                                             margin={'normal'}
+                                             disabled={selectedRoutine?.isActive}
+                                >
+                                    <InputLabel>
+                                        Routine Status
+                                    </InputLabel>
+
+                                    <Select
+                                        label={'Routine Status'}
+                                        value={value}
+                                        onChange={(event) => onChange(event.target.value)}
+                                    >
+
+                                        {
+                                            options.map((option, index) => (
+                                                <MenuItem key={index} value={option.value}>{option.name}</MenuItem>
+                                            ))
+                                        }
+
+                                    </Select>
+
+                                    <FormHelperText error={!!errors?.status}>
+                                        {errors.status?.message}
+                                    </FormHelperText>
+
+                                </FormControl>
+                            )} name={'status'}
+                                        control={control}
 
                             />
-                            <FormHelperText error={!!errors?.name}>
-                                {errors.name?.message}
-                            </FormHelperText>
-                        </FormControl>
 
-                        <FormControl fullWidth
-                                     margin={'normal'}>
-                            <InputLabel>
-                                Routine Status
-                            </InputLabel>
 
-                            <Select
-                                {...register('status', {required: true})}
-                                label={'Routine Status'}
-                                value={selectedStatus}
-                                onChange={(event) => setSelectedStatus(event.target.value)}
-                            >
+                            <Controller render={({field: {value, onChange}}) => (
+                                <DesktopTimePicker
+                                    label="Start Time"
+                                    value={value}
+                                    onChange={(value) => onChange(value)}
+                                    renderInput={(params) => <TextField {...params} fullWidth={true} />}
+                                />
+                            )} name={'startTime'} control={control}/>
 
-                                {
-                                    options.map((option, index) => (
-                                        <MenuItem key={index} value={option.value}>{option.name}</MenuItem>
-                                    ))
-                                }
+                            <Controller render={({field: {value, onChange}}) => (
+                                <FormControl
+                                    disabled={!!selectedRoutine}
+                                    margin={'normal'}
+                                    fullWidth={true}
+                                >
+                                    <InputLabel>Period Length</InputLabel>
+                                    <OutlinedInput
+                                        value={value}
+                                        onChange={(event) => onChange(event.target.value)}
+                                        label={'Period Length'}
 
-                            </Select>
+                                    >
 
-                            <FormHelperText error={!!errors?.status}>
-                                {errors.status?.message}
-                            </FormHelperText>
+                                    </OutlinedInput>
+                                </FormControl>
+                            )} name={'periodLength'}
+                                        control={control}/>
 
-                        </FormControl>
 
-                        <Box sx={{mt: 2}}>
-                            <Button variant={'contained'} fullWidth={true}
-                                    type={'submit'}
-                            >
-                                Submit
-                            </Button>
-                        </Box>
-                    </form>
+                            <Box sx={{mt: 2}}>
+                                <Button variant={'contained'} fullWidth={true}
+                                        type={'submit'}
+                                >
+                                    Submit
+                                </Button>
+                            </Box>
+                        </form>
 
-                </DialogContent>
-            </Dialog>
+                    </DialogContent>
+                </Dialog>
+
+            </LocalizationProvider>
+
+            <Menu
+                anchorEl={anchorEl}
+                open={open}
+                onClose={handleClose}
+                onClick={handleClose}
+                transformOrigin={{horizontal: 'right', vertical: 'top'}}
+                anchorOrigin={{horizontal: 'right', vertical: 'bottom'}}
+            >
+
+                <MenuItem onClick={selectAndOpenModal}>
+                    <ListItemIcon>
+                        <Edit fontSize="small"/>
+                    </ListItemIcon>
+                    Edit
+                </MenuItem>
+                <MenuItem onClick={activateOrDeactivate}>
+                    <ListItemIcon>
+                        <Sync fontSize="small"/>
+                    </ListItemIcon>
+                    {selectedRoutine?.isActive ? 'Deactivate' : 'Activate'}
+                </MenuItem>
+                <MenuItem>
+                    <ListItemIcon>
+                        <Delete color={'primary.warning'} fontSize="small"/>
+                    </ListItemIcon>
+                    Delete
+                </MenuItem>
+            </Menu>
 
         </div>
     )
