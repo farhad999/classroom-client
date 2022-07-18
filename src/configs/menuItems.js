@@ -33,5 +33,9 @@ export const menuItems = [
         id: 'routine',
         title: 'Routine',
         url: '/routines'
+    }, {
+        id: 'classes',
+        title: 'Classes',
+        url: '/classes',
     }
 ]
