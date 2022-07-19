@@ -4,16 +4,11 @@ import axios from "axios";
 import {
     Box,
     Button,
-    Card,
-    CardContent,
-    Divider,
-    FormControl,
-    OutlinedInput,
     Paper,
-    TextField,
     Typography
 } from "@mui/material";
 import ErrorWrapper from "../../components/ErrorWrapper";
+import Posts from "./Posts";
 
 function Classroom() {
 
@@ -21,48 +16,51 @@ function Classroom() {
 
     let [loading, setLoading] = React.useState(true);
 
+    let [statusCode, setStatusCode] = React.useState(null);
+
     let {id} = useParams();
 
+    //fetching
+
+
     React.useEffect(() => {
-        axios.get('/c/' + id)
-            .then(res => {
+
+        (async () => {
+            try {
+                setLoading(true)
+                const res = await axios.get(`/c/${id}`);
                 setCls(res.data);
                 setLoading(false);
-            }).catch(er => console.log(er));
+            } catch (er) {
+                console.log('er', er);
+                setLoading(false);
+            }
+        })();
+
+
     }, []);
 
     if (loading) {
         return <div>Loading</div>
     }
 
+
     return (
-        <ErrorWrapper status={401}>
-            <Paper elevation={2} sx={{height: '25vh', position: 'relative'}}>
+        <ErrorWrapper status={statusCode}>
+            <Paper elevation={2} sx={{height: '200px', position: 'relative'}}>
 
                 <Typography sx={{position: 'absolute', bottom: 5, left: 10}} variant={'h2'}>{cls.name}</Typography>
 
             </Paper>
 
-            {/*<Box>
+            <Box>
                 <Button>Posts</Button>
                 <Button>Chats</Button>
                 <Button>Attendences</Button>
-            </Box>*/}
+            </Box>
 
-            <Card sx={{my: 1}}>
-                <CardContent>
-                    <TextField
-                        id="outlined-multiline-flexible"
-                        label="Multiline"
-                        multiline
-                        maxRows={4}
-                    />
+            <Posts/>
 
-                    <Button>Post</Button>
-
-                </CardContent>
-
-            </Card>
 
         </ErrorWrapper>
     )
