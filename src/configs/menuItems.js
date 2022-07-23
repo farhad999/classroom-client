@@ -1,5 +1,9 @@
 import {Window, Person} from "@mui/icons-material";
 
+//ac => access control if
+
+const role = 'SuperAdmin';
+
 export const menuItems = [
     {
         id: 'dashboard',
@@ -10,6 +14,7 @@ export const menuItems = [
         id: 'users',
         title: "Users",
         icon: <Person/>,
+        ac: {role: role, permission: 'users.view'},
         children: [
             {
                 id: 'users-student',
@@ -28,14 +33,17 @@ export const menuItems = [
     }, {
         id: 'courses',
         title: 'Courses',
-        url: '/courses'
+        url: '/courses',
+        ac: {role: role, permission: 'course.view'},
     }, {
         id: 'routine',
         title: 'Routine',
-        url: '/routines'
+        url: '/routines',
+        ac: {roles: role, permission: 'routine.view'}
     }, {
         id: 'classes',
         title: 'Classes',
         url: '/classes',
+        ac: {userType: ['teacher', 'student']},
     }
 ]
