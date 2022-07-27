@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import ErrorWrapper from "../../components/ErrorWrapper";
 import Posts from "./Posts";
+import {Link} from 'react-router-dom'
 
 function Classroom() {
 
@@ -56,7 +57,7 @@ function Classroom() {
             <Box>
                 <Button>Posts</Button>
                 <Button>Chats</Button>
-                <Button>Attendences</Button>
+                <Button component={Link} to={'att'}>Attendances</Button>
             </Box>
 
             <Posts/>

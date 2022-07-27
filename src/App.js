@@ -19,6 +19,7 @@ import Routines from "./pages/routine/Routines";
 import RoutineViewer from "./pages/routine/RoutineViewer";
 import Classes from "./pages/classroom/Classes";
 import Classroom from "./pages/classroom/Classroom";
+import Attendances from "./pages/Attendances";
 
 function App() {
 
@@ -65,6 +66,7 @@ function App() {
                         <Route path={'/routines/:id'} element={<RoutineViewer/>}/>
                         <Route path={'/routines'} element={<Routines/>}/>
                         <Route path={'/classes'} element={<Classes/>} />
+                        <Route path={'/c/:id/att'} element={<Attendances /> } />
                         <Route path={'/c/:id'} element={<Classroom />} />
                         <Route path={'/'} element={<Dashboard/>}/>
                     </Route>

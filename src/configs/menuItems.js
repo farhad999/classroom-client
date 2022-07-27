@@ -39,7 +39,7 @@ export const menuItems = [
         id: 'routine',
         title: 'Routine',
         url: '/routines',
-        ac: {roles: role, permission: 'routine.view'}
+        ac: {role: role, permission: 'routine.view'}
     }, {
         id: 'classes',
         title: 'Classes',
