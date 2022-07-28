@@ -10,7 +10,7 @@ import {
     TableCell,
     TableHead,
     TableRow,
-    TextField, Icon, TableContainer, Paper, Box, Typography, Stack
+    TextField, Icon, TableContainer, Paper, Box, Typography, Stack, DialogTitle, Switch
 } from "@mui/material";
 import {CustomDialogTitle} from "../components/MuiCustom/CustomDialogTitle";
 import {DataGrid} from "@mui/x-data-grid";
@@ -42,6 +42,11 @@ function Attendances() {
 
     const [studentAttendances, setStudentAttendances] = React.useState([]);
 
+    //for update
+    const [openEditDialog, setOpenEditDialog] = React.useState(false);
+    const [selectedAtt, setSelectedAtt] = React.useState(null);
+    const [switchAtt, setSwitchAtt] = React.useState(false);
+
     //fetch class students
 
     const fetchAttendance = () => {
@@ -54,11 +59,12 @@ function Attendances() {
 
                 setDates(dates);
 
-                let at = chain(attendances).groupBy('id').map((value, key) => {
+                let at = chain(attendances).groupBy('userId').map((value, key) => {
                     return {
                         name: value[0].firstName + ' ' + value[0].lastName,
-                        id: value[0].id,
-                        attendances: value.map(v => ({date: v.date, isAttend: v.isAttendant}))
+                        userId: value[0].userId,
+                        studentId: value[0].studentId,
+                        attendances: value.map(v => ({id: v.id, date: v.date, isAttend: v.isAttend}))
                     }
                 }).value();
 
@@ -124,13 +130,48 @@ function Attendances() {
             }).catch(er => console.log(er));
     }
 
-    const onSelect = (row) => {
+    const onSelectRow = (row) => {
         setSelectedStudents(row);
     }
 
-    const edit = (id, attend) => {
+    const edit = (student, attend) => {
+        setSelectedAtt({name: student.name, userId: student.userId, id: attend.id, date: attend.date})
         console.log('id', id, 'attend', attend);
+        setSwitchAtt(attend.isAttend);
+        setOpenEditDialog(true);
     }
+
+    const onSwitchChange = (event, value) => {
+
+        setSwitchAtt(value);
+
+        axios.put(`/c/${id}/att/${selectedAtt.id}`, {isAttend: value})
+            .then(res=> {
+
+                let at = [...studentAttendances];
+
+                at.map(st=> {
+                    if(st.userId === selectedAtt.userId){
+                        let {attendances} = st;
+                        console.log('attt', 'selected', selectedAtt,  'st', st);
+                        attendances.find(item=>item.id === selectedAtt.id).isAttend = value;
+                        st.attendances = attendances;
+                    }
+                    return st;
+                });
+
+                setStudentAttendances(at);
+
+                let {status} = res.data;
+                if(status === 'success'){
+                 toast.success('Updated');
+
+                }
+            }).catch(er=>console.log(er));
+
+    }
+
+    //
 
     return (
         <div>
@@ -166,10 +207,10 @@ function Attendances() {
                                     left: 0,
                                     background: 'white',
                                     zIndex: 9,
-                                }}>{student.name}</TableCell>
+                                }}>{`${student.name}(${student.studentId})`}</TableCell>
                                 {student.attendances.map((att) => (
                                     <TableCell sx={{writingMode: 'vertical'}}
-                                               onClick={() => edit(student.id, att.isAttend)}>{att.isAttend ?
+                                               onClick={() => edit(student, att)}>{att.isAttend ?
                                         <Icon color={'success'}> <CheckCircle/> </Icon> :
                                         <Icon color={'error'}><Cancel/></Icon>}</TableCell>
                                 ))}
@@ -212,13 +253,43 @@ function Attendances() {
                         columns={columns}
                         rows={students}
                         checkboxSelection
-                        onSelectionModelChange={onSelect}
+                        onSelectionModelChange={onSelectRow}
                         hideFooterPagination={true}
 
                     />
 
                     <Button sx={{mt: 2}} disabled={!selectedStudents.length} variant={'contained'}
                             onClick={addAttendance}>Save Attendance</Button>
+
+                </DialogContent>
+
+            </Dialog>
+
+            <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)}
+                    maxWidth={'xs'} fullWidth={true}
+            >
+                <DialogTitle>
+                    <Typography variant={'h4'}>Update Attendance</Typography>
+                </DialogTitle>
+
+                <DialogContent>
+                    <Stack direction={'row'} justifyContent={'space-between'}>
+                        <Typography variant={'h5'}>Student Name</Typography>
+                        <Typography variant={'h5'}>{selectedAtt?.name}</Typography>
+                    </Stack>
+                    <Stack marginY={1} direction={'row'} justifyContent={'space-between'}>
+                        <Typography variant={'h5'}>Student Id</Typography>
+                        <Typography variant={'h5'}>{selectedAtt?.studentId}</Typography>
+                    </Stack>
+                    <Stack marginY={1} direction={'row'} justifyContent={'space-between'}>
+                        <Typography variant={'h5'}>Date</Typography>
+                        <Typography variant={'h5'}>{moment(selectedAtt?.date).format('DD MMMM YY')}</Typography>
+                    </Stack>
+
+                    <Stack marginY={1} direction={'row'} justifyContent={'space-between'}>
+                        <Typography variant={'h5'}>isAttend</Typography>
+                        <Switch checked={switchAtt} onChange={onSwitchChange}/>
+                    </Stack>
 
                 </DialogContent>
 
