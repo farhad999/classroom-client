@@ -57,7 +57,8 @@ function Classroom() {
             <Box>
                 <Button>Posts</Button>
                 <Button>Chats</Button>
-                <Button component={Link} to={'att'}>Attendances</Button>
+                <Button component={Link} to={`/c/${id}/att`}>Attendances</Button>
+                <Button component={Link} to={`/c/${id}/w`}>ClassWork</Button>
             </Box>
 
             <Posts/>

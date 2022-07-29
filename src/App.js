@@ -20,6 +20,8 @@ import RoutineViewer from "./pages/routine/RoutineViewer";
 import Classes from "./pages/classroom/Classes";
 import Classroom from "./pages/classroom/Classroom";
 import Attendances from "./pages/Attendances";
+import ClassWork from "./pages/classroom/ClassWork";
+import ClassWorkItem from "./pages/classroom/ClassWorkItem";
 
 function App() {
 
@@ -67,6 +69,8 @@ function App() {
                         <Route path={'/routines'} element={<Routines/>}/>
                         <Route path={'/classes'} element={<Classes/>} />
                         <Route path={'/c/:id/att'} element={<Attendances /> } />
+                        <Route path={'/c/:id/w/:w'} element={<ClassWorkItem /> } />
+                        <Route path={'/c/:id/w'} element={<ClassWork /> } />
                         <Route path={'/c/:id'} element={<Classroom />} />
                         <Route path={'/'} element={<Dashboard/>}/>
                     </Route>
