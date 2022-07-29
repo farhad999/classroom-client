@@ -22,6 +22,7 @@ import Classroom from "./pages/classroom/Classroom";
 import Attendances from "./pages/Attendances";
 import ClassWork from "./pages/classroom/ClassWork";
 import ClassWorkItem from "./pages/classroom/ClassWorkItem";
+import TestPage from "./pages/test/TestPage";
 
 function App() {
 
@@ -62,6 +63,7 @@ function App() {
             <BrowserRouter>
                 <Routes>
                     <Route path={'/auth/login'} element={<Login/>}/>
+                    <Route path={'/test'} element={<TestPage />} />
                     <Route path={'/'} element={<HomeLayout/>}>
                         <Route path={'/users/:type'} element={<Users/>}/>
                         <Route path={'/courses'} element={<Courses/>}/>
