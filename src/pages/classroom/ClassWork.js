@@ -16,7 +16,7 @@ import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
 import {AdapterMoment} from "@mui/x-date-pickers/AdapterMoment";
 import {DateTimePicker, DesktopDatePicker, DesktopDateTimePicker} from "@mui/x-date-pickers";
 import {useForm, Controller} from "react-hook-form";
-import FileManager from "../../components/FileManager";
+import FileUploader from "../../components/FileUploader";
 import axios from "axios";
 import {useParams, Link} from "react-router-dom";
 import moment from "moment";
@@ -29,6 +29,16 @@ function ClassWork(props) {
 
     const [assignments, setAssignments] = React.useState([]);
 
+    //create assignment
+
+    const [uploads, setUploads] = React.useState([]);
+
+    const [uploadDialog, setUploadDialog] = React.useState(false);
+
+    //let ref
+
+    const uploadRef = React.useRef();
+
     //classId
     const {id} = useParams();
 
@@ -39,12 +49,12 @@ function ClassWork(props) {
         }
     });
 
-    React.useEffect(()=> {
+    React.useEffect(() => {
         axios.get(`/c/${id}/assignments`)
-            .then(res=> {
+            .then(res => {
                 setAssignments(res.data);
                 setLoading(false);
-            }).catch(er=>console.log(er));
+            }).catch(er => console.log(er));
     }, []);
 
     const createAssignment = (data) => {
@@ -52,13 +62,15 @@ function ClassWork(props) {
 
         data.due = data.due && data.due.format('YYYY-MM-DD HH:mm:ss');
 
-        axios.post(`/c/${id}/assignments`, data)
-            .then(res=> {
+        data.attachments = uploads;
 
-            }).catch(er=>console.log(er))
+        axios.post(`/c/${id}/assignments`, data)
+            .then(res => {
+
+            }).catch(er => console.log(er))
     }
 
-    if(loading){
+    if (loading) {
         return <div>
             loading...
         </div>
@@ -69,12 +81,12 @@ function ClassWork(props) {
 
             <Button onClick={() => setOpenDialog(true)}>Create</Button>
 
-            {assignments.map((assignment)=> (
+            {assignments.map((assignment) => (
                 <Box component={Link} to={`/c/${id}/w/${assignment.id}`}>
                     <Card sx={{my: 1}}>
                         <CardContent>
-                            <Typography>{assignment.title}</Typography>
-                            <Typography>Due: {assignment.due ? moment(assignment.due).format('MMMM DD'): 'No Due'}</Typography>
+                            <Typography textTransform={'capitalize'} variant={'h5'}>{assignment.title}</Typography>
+                            <Typography>Due: {assignment.due ? moment(assignment.due).format('MMMM DD') : 'No Due'}</Typography>
                         </CardContent>
                     </Card>
                 </Box>
@@ -137,7 +149,14 @@ function ClassWork(props) {
                                         )} name={'description'} control={control}/>
 
 
-                                        <FileManager/>
+                                        <FileUploader
+                                            ref={uploadRef}
+                                            uploadDirectory={`classes/${id}`}
+                                            onUploadComplete={(file) => setUploads(prev => [...prev, file])}
+                                            onFileRemoved={(files)=>setUploads(files)}
+                                        />
+
+                                        <Button onClick={() => uploadRef.current.openDialog()}>Upload</Button>
 
                                     </CardContent>
                                 </Card>
