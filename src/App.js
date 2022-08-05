@@ -20,9 +20,11 @@ import RoutineViewer from "./pages/routine/RoutineViewer";
 import Classes from "./pages/classroom/Classes";
 import Classroom from "./pages/classroom/Classroom";
 import Attendances from "./pages/Attendances";
-import ClassWork from "./pages/classroom/ClassWork";
-import ClassWorkItem from "./pages/classroom/ClassWorkItem";
+import ClassWork from "./pages/classroom/classwork/ClassWork";
+import ClassWorkItem from "./pages/classroom/classwork/ClassWorkItem";
 import TestPage from "./pages/test/TestPage";
+import Submissions from "./pages/classroom/classwork/Submissions";
+import ClassWorkDetails from "./pages/classroom/classwork/ClassWorkDetails";
 
 function App() {
 
@@ -63,17 +65,21 @@ function App() {
             <BrowserRouter>
                 <Routes>
                     <Route path={'/auth/login'} element={<Login/>}/>
-                    <Route path={'/test'} element={<TestPage />} />
+                    <Route path={'/test'} element={<TestPage/>}/>
                     <Route path={'/'} element={<HomeLayout/>}>
                         <Route path={'/users/:type'} element={<Users/>}/>
                         <Route path={'/courses'} element={<Courses/>}/>
                         <Route path={'/routines/:id'} element={<RoutineViewer/>}/>
                         <Route path={'/routines'} element={<Routines/>}/>
-                        <Route path={'/classes'} element={<Classes/>} />
-                        <Route path={'/c/:id/att'} element={<Attendances /> } />
-                        <Route path={'/c/:id/w/:w'} element={<ClassWorkItem /> } />
-                        <Route path={'/c/:id/w'} element={<ClassWork /> } />
-                        <Route path={'/c/:id'} element={<Classroom />} />
+                        <Route path={'/classes'} element={<Classes/>}/>
+                        <Route path={'/c/:id/att'} element={<Attendances/>}/>
+
+                        <Route path={'/c/:id/w/:w'} element={<ClassWorkItem/>}>
+                            <Route path={'/c/:id/w/:w'} element={<ClassWorkDetails/>}/>
+                            <Route path={'/c/:id/w/:w/submissions'} element={<Submissions/>}/>
+                        </Route>
+                        <Route path={'/c/:id/w'} element={<ClassWork/>}/>
+                        <Route path={'/c/:id'} element={<Classroom/>}/>
                         <Route path={'/'} element={<Dashboard/>}/>
                     </Route>
                 </Routes>

@@ -16,11 +16,11 @@ import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
 import {AdapterMoment} from "@mui/x-date-pickers/AdapterMoment";
 import {DateTimePicker, DesktopDatePicker, DesktopDateTimePicker} from "@mui/x-date-pickers";
 import {useForm, Controller} from "react-hook-form";
-import FileUploader from "../../components/FileUploader";
+import FileUploader from "../../../components/FileUploader";
 import axios from "axios";
 import {useParams, Link} from "react-router-dom";
 import moment from "moment";
-import CreateOrUpdateAssignment from "../../components/CreateOrUpdateAssignment";
+import CreateOrUpdateAssignment from "../../../components/CreateOrUpdateAssignment";
 import {toast} from "react-toastify";
 
 function ClassWork(props) {
