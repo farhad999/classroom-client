@@ -11,7 +11,7 @@ import {CustomDialogTitle} from "./MuiCustom/CustomDialogTitle";
 
 const FileUploader = React.forwardRef((props, ref) => {
 
-    const {uploadDirectory, onUploadComplete, itemFullWidth, onFileRemoved} = props;
+    const {uploadDirectory, onUploadComplete, itemFullWidth, onFileRemoved, initialFiles} = props;
 
     const fileRef = React.useRef();
 
@@ -19,7 +19,7 @@ const FileUploader = React.forwardRef((props, ref) => {
 
     const [currentFiles, setCurrentFiles] = React.useState([]);
 
-    const [files, setFiles] = React.useState([]);
+    const [files, setFiles] = React.useState(initialFiles);
 
     const [hideSection, setHideSection] = React.useState(false);
 
@@ -191,10 +191,12 @@ FileUploader.propTypes = {
     uploadDirectory: PropTypes.string,
     itemFullWidth: PropTypes.bool,
     onFileRemoved: PropTypes.func,
+    initialFiles: PropTypes.array,
 }
 
 FileUploader.defaultProps = {
     itemFullWidth: false,
+    initialFiles: [],
 }
 
 export default FileUploader;
