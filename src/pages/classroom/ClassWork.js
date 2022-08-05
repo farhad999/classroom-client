@@ -20,6 +20,8 @@ import FileUploader from "../../components/FileUploader";
 import axios from "axios";
 import {useParams, Link} from "react-router-dom";
 import moment from "moment";
+import CreateOrUpdateAssignment from "../../components/CreateOrUpdateAssignment";
+import {toast} from "react-toastify";
 
 function ClassWork(props) {
 
@@ -32,8 +34,6 @@ function ClassWork(props) {
     //create assignment
 
     const [uploads, setUploads] = React.useState([]);
-
-    const [uploadDialog, setUploadDialog] = React.useState(false);
 
     //let ref
 
@@ -49,25 +49,23 @@ function ClassWork(props) {
         }
     });
 
-    React.useEffect(() => {
+    const fetchAssignment = () => {
         axios.get(`/c/${id}/assignments`)
             .then(res => {
                 setAssignments(res.data);
                 setLoading(false);
             }).catch(er => console.log(er));
+    }
+
+    React.useEffect(() => {
+        fetchAssignment();
     }, []);
 
-    const createAssignment = (data) => {
-        console.log('data', data);
 
-        data.due = data.due && data.due.format('YYYY-MM-DD HH:mm:ss');
-
-        data.attachments = uploads;
-
-        axios.post(`/c/${id}/assignments`, data)
-            .then(res => {
-
-            }).catch(er => console.log(er))
+    function onSuccess() {
+        setOpenDialog(false);
+        toast.success('Assignment Added');
+        fetchAssignment();
     }
 
     if (loading) {
@@ -76,13 +74,14 @@ function ClassWork(props) {
         </div>
     }
 
+
     return (
         <div>
 
             <Button onClick={() => setOpenDialog(true)}>Create</Button>
 
-            {assignments.map((assignment) => (
-                <Box component={Link} to={`/c/${id}/w/${assignment.id}`}>
+            {assignments.map((assignment, index) => (
+                <Box key={'assign' + index} component={Link} to={`/c/${id}/w/${assignment.id}`}>
                     <Card sx={{my: 1}}>
                         <CardContent>
                             <Typography textTransform={'capitalize'} variant={'h5'}>{assignment.title}</Typography>
@@ -93,114 +92,12 @@ function ClassWork(props) {
 
             ))}
 
-            <Dialog open={openDialog} onClose={() => setOpenDialog(false)}
-                    fullScreen={true}
+            <CreateOrUpdateAssignment classId={id}
+                                      onSuccess={onSuccess}
+                                      openDialog={openDialog}
+                                      closeDialog={() => setOpenDialog(false)}
 
-            >
-                <form onSubmit={handleSubmit(createAssignment)}>
-
-                    <AppBar color={'transparent'} sx={{position: 'relative'}}>
-                        <Toolbar>
-                            <IconButton
-                                edge="start"
-                                color="inherit"
-                                onClick={() => setOpenDialog(false)}
-                                aria-label="close"
-                            >
-                                <Close/>
-                            </IconButton>
-
-                            <Icon color={'primary'}>
-                                <AssignmentOutlined/>
-                            </Icon>
-
-                            <Typography sx={{ml: 2, flex: 1}} variant="h4" component="div">
-                                Assignment
-                            </Typography>
-                            <Button type={'submit'} autoFocus variant={'contained'}>
-                                Save
-                            </Button>
-                        </Toolbar>
-                    </AppBar>
-                    <DialogContent sx={{backgroundColor: '#efefef'}}>
-                        <Grid container spacing={2}>
-
-                            <Grid item sm={8}>
-                                <Card>
-                                    <CardContent>
-
-                                        <Controller render={({field: {value, onChange}}) => (
-                                            <TextField label={'Title'}
-                                                       variant={'filled'}
-                                                       value={value}
-                                                       onChange={(event) => onChange(event.target.value)}
-                                                       margin={'normal'} fullWidth={true}
-                                            />
-                                        )} name={'title'} control={control}/>
-
-
-                                        <Controller render={({field: {value, onChange}}) => (
-                                            <TextField label={'Description'} fullWidth={true}
-                                                       margin={"normal"}
-                                                       variant={'filled'}
-                                                       multiline={true} rows={4} value={value}
-                                                       onChange={(event) => onChange(event.target.value)}
-                                            />
-                                        )} name={'description'} control={control}/>
-
-
-                                        <FileUploader
-                                            ref={uploadRef}
-                                            uploadDirectory={`classes/${id}`}
-                                            onUploadComplete={(file) => setUploads(prev => [...prev, file])}
-                                            onFileRemoved={(files)=>setUploads(files)}
-                                        />
-
-                                        <Button onClick={() => uploadRef.current.openDialog()}>Upload</Button>
-
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-
-                            <Grid item sm={4}>
-                                <Card>
-                                    <CardContent>
-
-                                        <Typography>Points</Typography>
-
-                                        <Controller render={({field: {value, onChange}}) => (
-                                            <TextField label={'Points'} fullWidth={true} variant={'filled'}
-                                                       margin={'normal'}
-                                                       value={value} onChange={(event) => onChange(event.target.value)}
-                                            />
-                                        )} name={'points'} control={control}/>
-
-
-                                        <LocalizationProvider dateAdapter={AdapterMoment}>
-
-                                            <Controller render={({field: {value, onChange}}) => (
-                                                <DateTimePicker
-                                                    label={'Due Date'}
-                                                    renderInput={(props) =>
-                                                        <TextField {...props} fullWidth={true}
-                                                                   margin={'normal'} variant={'filled'}
-                                                        />}
-                                                    onChange={(d) => {
-                                                        onChange(d)
-                                                    }}
-                                                    value={value}
-                                                />
-                                            )} name={'due'} control={control}/>
-
-
-                                        </LocalizationProvider>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                        </Grid>
-                    </DialogContent>
-                </form>
-            </Dialog>
+            />
 
         </div>
     )
