@@ -20,10 +20,14 @@ import axios from "axios";
 import {useNavigate, useParams} from "react-router-dom";
 import NotFound from "../../../components/Errors/NotFound";
 import PermissionDenied from "../../../components/Errors/PermissionDenied";
+import FileUploader from "../../../components/FileUploader";
+import {useSelector} from "react-redux";
 
 function ClassWorkDetails() {
 
     let {id, w} = useParams();
+
+    const {user} = useSelector(state => state.auth);
 
     let navigator = useNavigate();
 
@@ -31,10 +35,19 @@ function ClassWorkDetails() {
 
     const [errorCode, setErrorCode] = React.useState(null);
 
+    //
+
+    const ref = React.useRef();
+
     //open dialog
 
     const [openDialog, setOpenDialog] = React.useState(false);
+
     const [deleteDialog, setDeleteDialog] = React.useState(false);
+
+    //attachments
+
+    const [files, setFiles] = React.useState([]);
 
     const [anchorEl, setAnchorEl] = React.useState(null);
     const open = Boolean(anchorEl);
@@ -45,8 +58,10 @@ function ClassWorkDetails() {
 
         axios.get(`/c/${id}/assignments/${w}`)
             .then(res => {
+                let assignment = res.data;
                 setAssignment(res.data);
                 setLoading(false);
+                setFiles(assignment.studentAttachments)
                 console.log("res", res);
             }).catch(er => {
             let {status} = er.response;
@@ -91,6 +106,13 @@ function ClassWorkDetails() {
             }).catch(er => console.log(er));
     }
 
+    function submitClassWork() {
+        axios.post(`/c/${id}/assignments/${w}/submit_classwork`, {files: files})
+            .then(res => {
+                console.log('res', res);
+            }).catch(er => console.log(er))
+    }
+
     function onSuccess() {
         setOpenDialog(false);
         toast.success('Assignment Updated');
@@ -114,10 +136,8 @@ function ClassWorkDetails() {
     return (
 
         <>
-
-
             <Grid container spacing={2}>
-                <Grid item sm={8}>
+                <Grid item xs={12} md={8}>
                     <Box>
                         <Typography variant={'h4'} textTransform={'capitalize'}>{assignment.title}</Typography>
                         <Stack my={2} direction={'row'} alignItems={'center'} justifyContent={'space-between'}>
@@ -155,15 +175,45 @@ function ClassWorkDetails() {
                         </Box>
                     </Box>
                 </Grid>
-                <Grid item sm={4}>
-                    <Card>
-                        <CardContent>
-                            <Typography variant={'h4'}>Your Work</Typography>
-                            <Button sx={{my: 2}} variant={'outlined'} fullWidth={true}>Attach File</Button>
-                            <Button variant={'contained'} fullWidth={true}>Submit</Button>
-                        </CardContent>
-                    </Card>
-                </Grid>
+
+                {
+                    user.userType === 'student' &&
+
+
+                    <Grid item xs={12} md={4}>
+                        <Card>
+                            <CardContent>
+                                <Typography my={2} variant={'h4'}>Your Work</Typography>
+                                <FileUploader
+                                    ref={ref}
+                                    initialFiles={files}
+                                    uploadDirectory={`users/${user.id}`}
+                                    onUploadComplete={(file) => setFiles(prev => [...prev, file])}
+                                    onFileRemoved={(files) => setFiles(files)}
+                                    itemFullWidth={true}
+                                    hideButton={true}
+                                />
+
+                                <Button disabled={assignment.status === 'submitted'}
+                                        onClick={() => ref.current.openDialog()} sx={{my: 2}} variant={'outlined'}
+                                        fullWidth={true}>Attach File</Button>
+
+                                {
+                                    assignment.status === 'submitted' ?
+                                        <Typography my={2} textAlign={'center'} variant={'h4'}>Assignment
+                                            Submitted</Typography>
+                                        :
+                                        <Button disabled={!files.length} onClick={submitClassWork} variant={'contained'}
+                                                fullWidth={true}>Submit</Button>
+
+                                }
+
+
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
+                }
             </Grid>
 
             <CreateOrUpdateAssignment openDialog={openDialog} closeDialog={() => setOpenDialog(false)}
