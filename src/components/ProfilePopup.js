@@ -6,15 +6,15 @@ import {useNavigate} from 'react-router-dom';
 import {useTheme} from '@mui/material/styles';
 import {
     Avatar,
-    Box,
+    Box, Card,
     ClickAwayListener,
     Divider,
     List,
     ListItemButton,
     ListItemIcon,
-    ListItemText,
+    ListItemText, Menu,
     Paper,
-    Popper,
+    Popper, styled,
     Typography
 } from '@mui/material';
 
@@ -34,7 +34,7 @@ const ProfileSection = () => {
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const [open, setOpen] = useState(false);
 
-    let {user} = useSelector(state=>state.auth);
+    let {user} = useSelector(state => state.auth);
 
     //logout
 
@@ -82,16 +82,12 @@ const ProfileSection = () => {
                     ...theme.typography.mediumAvatar,
                     margin: '8px 0 8px 8px !important',
                     cursor: 'pointer',
-                    backgroundColor: theme.palette.grey[300]
                 }}
                 ref={anchorRef}
-                aria-controls={open ? 'menu-list-grow' : undefined}
-                aria-haspopup="true"
                 onClick={handleToggle}
             >
-                F
+                {user.firstName.charAt(0)}
             </Avatar>
-
 
             <Popper
                 placement="bottom-end"
@@ -115,21 +111,22 @@ const ProfileSection = () => {
                     <Transitions in={open} {...TransitionProps}>
                         <Paper>
                             <ClickAwayListener onClickAway={handleClose}>
-                                <MainCard border={false} elevation={16} content={false} boxShadow
-                                          shadow={theme.shadows[16]}>
+                                <Card border={false} elevation={16}>
                                     <Box sx={{p: 2, display: 'flex', alignItems: 'center'}}>
 
-                                        <Avatar>F</Avatar>
+                                        <Avatar>
+                                            {user.firstName.charAt(0)}
+                                        </Avatar>
 
                                         <Box sx={{ml: 2}}>
-                                            <Typography component="div" textTransform={'capitalize'} variant="h4" sx={{fontWeight: 400}}>
-                                                {user.firstName+" "+user.lastName}
+                                            <Typography component="div" textTransform={'capitalize'} variant="h4"
+                                                        sx={{fontWeight: 500}}>
+                                                {user.firstName + " " + user.lastName}
                                             </Typography>
-                                            <Typography component="div" textTransform={'capitalize'} variant="h6" sx={{fontWeight: 400}}>
+                                            <Typography component="div" textTransform={'capitalize'} variant="h6">
                                                 {user.email}
                                             </Typography>
                                         </Box>
-
 
                                         <Divider/>
                                     </Box>
@@ -186,7 +183,7 @@ const ProfileSection = () => {
                                             </ListItemButton>
                                         </List>
                                     </Box>
-                                </MainCard>
+                                </Card>
                             </ClickAwayListener>
                         </Paper>
                     </Transitions>

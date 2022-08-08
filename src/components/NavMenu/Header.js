@@ -1,11 +1,12 @@
 import PropTypes from 'prop-types';
 import {useTheme} from '@mui/material/styles';
-import {Avatar, Box, ButtonBase} from '@mui/material';
+import {Avatar, Box, Button, ButtonBase, IconButton, styled, Menu, MenuItem, Divider, Typography} from '@mui/material';
 import {appConfig} from "../../configs/app.config";
 
 import ProfilePopup from '../ProfilePopup';
 
-import {Menu} from "@mui/icons-material";
+import {Menu as MenuIcon} from "@mui/icons-material";
+import {Link} from "react-router-dom";
 
 const Header = ({handleMenuOpen}) => {
     const theme = useTheme();
@@ -22,33 +23,20 @@ const Header = ({handleMenuOpen}) => {
                     }
                 }}
             >
-                <Box component="span" sx={{display: {xs: 'none', md: 'block'}, flexGrow: 1}}>
-                    <h3>{appConfig.appName}</h3>
+                <IconButton onClick={handleMenuOpen}>
+
+                    <MenuIcon size="1.3rem"/>
+
+                </IconButton>
+
+                <Box ml={1} component="span">
+                    <Typography variant={'h4'}>
+                        <Link to={'/'}>{appConfig.appName}</Link>
+                    </Typography>
                 </Box>
-                <ButtonBase sx={{borderRadius: '12px', overflow: 'hidden'}}>
-                    <Avatar
-                        variant="rounded"
-                        sx={{
-                            ...theme.typography.commonAvatar,
-                            ...theme.typography.mediumAvatar,
-                            transition: 'all .2s ease-in-out',
-                            background: theme.palette.secondary.light,
-                            color: theme.palette.secondary.dark,
-                            '&:hover': {
-                                background: theme.palette.secondary.dark,
-                                color: theme.palette.secondary.light
-                            }
-                        }}
-                        onClick={handleMenuOpen}
-                        color="inherit"
-                    >
-                        <Menu size="1.3rem"/>
-                    </Avatar>
-                </ButtonBase>
+
             </Box>
 
-            {/* header search */}
-            <Box sx={{flexGrow: 1}}/>
             <Box sx={{flexGrow: 1}}/>
 
             <ProfilePopup />

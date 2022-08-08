@@ -1,13 +1,13 @@
 import PropTypes from 'prop-types';
 import {useTheme} from '@mui/material/styles';
 import {Box, Drawer, useMediaQuery} from '@mui/material';
-
 import Menu from './Menu';
 import {themeConfig} from "../../configs/theme";
 import {appConfig} from '../../configs/app.config'
 import {menuItems} from '../../configs/menuItems';
 
 const Sidebar = ({drawerOpen, drawerToggle, window}) => {
+
     const theme = useTheme();
     const matchUpMd = useMediaQuery(theme.breakpoints.up('md'));
 
@@ -32,19 +32,18 @@ const Sidebar = ({drawerOpen, drawerToggle, window}) => {
         <Box component="nav" sx={{flexShrink: {md: 0}, width: matchUpMd ? themeConfig.drawerWidth : 'auto'}}
              aria-label="mailbox folders">
             <Drawer
-                container={container}
-                variant={matchUpMd ? 'persistent' : 'temporary'}
+                variant={matchUpMd ? 'permanent' : 'temporary'}
                 anchor="left"
                 open={drawerOpen}
                 onClose={drawerToggle}
                 sx={{
                     '& .MuiDrawer-paper': {
                         width: themeConfig.drawerWidth,
-                        background: theme.palette.background.default,
+                        background: theme.palette.white,
                         color: theme.palette.text.primary,
                         borderRight: 'none',
                         [theme.breakpoints.up('md')]: {
-                            top: '88px'
+                            top: '85px'
                         }
                     }
                 }}
