@@ -1,65 +1,15 @@
 export default function componentStyleOverrides(theme) {
-    const bgColor = theme.colors?.grey[50];
+    const bgColor = '#fff';
     return {
         MuiButton: {
             styleOverrides: {
                 root: {
                     fontWeight: 500,
-                    borderRadius: '4px'
-                }
-            }
-        },
-        MuiPaper: {
-            defaultProps: {
-                elevation: 0
-            },
-            styleOverrides: {
-                root: {
-                    backgroundImage: 'none'
-                },
-                rounded: {
-                    borderRadius: `${theme?.customization?.borderRadius}px`
-                }
-            }
-        },
-        MuiListItemButton: {
-            styleOverrides: {
-                root: {
-                    color: theme.darkTextPrimary,
-                    paddingTop: '10px',
-                    paddingBottom: '10px',
-                    '&.Mui-selected': {
-                        color: theme.menuSelected,
-                        backgroundColor: theme.menuSelectedBack,
-                        '&:hover': {
-                            backgroundColor: theme.menuSelectedBack
-                        },
-                        '& .MuiListItemIcon-root': {
-                            color: theme.menuSelected
-                        }
-                    },
+                    borderRadius: '4px',
+                    boxShadow: 'unset',
                     '&:hover': {
-                        backgroundColor: theme.menuSelectedBack,
-                        color: theme.menuSelected,
-                        '& .MuiListItemIcon-root': {
-                            color: theme.menuSelected
-                        }
+                        boxShadow: 'unset'
                     }
-                }
-            }
-        },
-        MuiListItemIcon: {
-            styleOverrides: {
-                root: {
-                    color: theme.darkTextPrimary,
-                    minWidth: '36px'
-                }
-            }
-        },
-        MuiListItemText: {
-            styleOverrides: {
-                primary: {
-                    color: theme.textDark
                 }
             }
         },
@@ -78,7 +28,6 @@ export default function componentStyleOverrides(theme) {
             styleOverrides: {
                 root: {
                     background: bgColor,
-                    borderRadius: `${theme?.customization?.borderRadius}px`,
                     '& .MuiOutlinedInput-notchedOutline': {
                         borderColor: theme.colors?.grey[400]
                     },
@@ -93,7 +42,6 @@ export default function componentStyleOverrides(theme) {
                     fontWeight: 500,
                     background: bgColor,
                     padding: '15.5px 14px',
-                    borderRadius: `${theme?.customization?.borderRadius}px`,
                     '&.MuiInputBase-inputSizeSmall': {
                         padding: '10px 14px',
                         '&.MuiInputBase-inputAdornedStart': {
@@ -104,28 +52,9 @@ export default function componentStyleOverrides(theme) {
                 inputAdornedStart: {
                     paddingLeft: 4
                 },
-                notchedOutline: {
-                    borderRadius: `${theme?.customization?.borderRadius}px`
-                }
             }
         },
 
-        MuiSlider: {
-            styleOverrides: {
-                root: {
-                    '&.Mui-disabled': {
-                        color: theme.colors?.grey[300]
-                    }
-                },
-                mark: {
-                    backgroundColor: theme.paper,
-                    width: '4px'
-                },
-                valueLabel: {
-                    color: theme?.colors?.primary.light
-                }
-            }
-        },
         MuiDivider: {
             styleOverrides: {
                 root: {
@@ -137,27 +66,10 @@ export default function componentStyleOverrides(theme) {
         MuiAvatar: {
             styleOverrides: {
                 root: {
-                    color: theme.colors?.primary.dark,
-                    background: theme.colors?.primary[200]
+                    color: theme.colors?.paper,
+                    background: theme.colors?.primary[700]
                 }
             }
         },
-        MuiChip: {
-            styleOverrides: {
-                root: {
-                    '&.MuiChip-deletable .MuiChip-deleteIcon': {
-                        color: 'inherit'
-                    }
-                }
-            }
-        },
-        MuiTooltip: {
-            styleOverrides: {
-                tooltip: {
-                    color: theme.paper,
-                    background: theme.colors?.grey[700]
-                }
-            }
-        }
-    };
+    }
 }

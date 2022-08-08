@@ -2,15 +2,22 @@ export const palette =
     {
         // paper & background
         paper: "#ffffff",
+        semiLight: '#fcfcfc',
 
-// primary
-    primary: {
-        light: "#e3f2fd",
-        main: "#2196f3",
-        dark: "#1e88e5",
-        200: "#90caf9",
-        800: "#1565c0",
-    },
+        white: '#fff',
+        // primary
+        primary: {
+            'light': '#f3f2fd',
+            '100': '#bbdefb',
+            '200': '#90caf9',
+            '300': '#64b5f6',
+            '400': '#42a5f5',
+            '500': '#2196f3',
+            '600': '#1e88e5',
+            '700': '#1976d2',
+            'main': '#1565c0',
+            'dark': '#0d47a1'
+        },
 
 
 // secondary
@@ -23,14 +30,6 @@ export const palette =
 
     },
 
-// success Colors
-    success:
-        {
-            light: "#b9f6ca",
-            200: "#69f0ae",
-            main: "#00e676",
-            dark: "#00c853",
-        },
 
 // error
     error:
@@ -41,13 +40,6 @@ export const palette =
 
         },
 
-// orange
-    orange:
-        {
-            light: "#fbe9e7",
-            main: "#ffab91",
-            dark: "#d84315"
-        },
 
 // warning
     warning:
@@ -65,8 +57,8 @@ export const palette =
         300: "#e0e0e0",
         500: "#9e9e9e",
         600: "#757575",
-        700: "#616161",
+        700: "rgba(60,64,67,0.9)",
+        800: "#3c4043",
         900: "#212121"
-    }
-
+    },
 }
