@@ -59,7 +59,7 @@ function App() {
     return (
         <ThemeProvider theme={themes}>
             <CssBaseline/>
-            <ToastContainer position={"top-left"} autoClose={5000}
+            <ToastContainer position={"top-right"} autoClose={5000}
                             hideProgressBar={true}
             />
             <BrowserRouter>
