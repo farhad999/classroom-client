@@ -10,12 +10,15 @@ import {
 import ErrorWrapper from "../../components/ErrorWrapper";
 import Posts from "./Posts";
 import {Link} from 'react-router-dom'
+import {fetchClassroom} from "../../store/slices/classroomSlice";
+import {useDispatch, useSelector} from "react-redux";
 
 function Classroom() {
 
-    let [cls, setCls] = React.useState(null);
+    const dispatch = useDispatch();
 
-    let [loading, setLoading] = React.useState(true);
+    const {cls, loading, error} = useSelector(state=>state.classroom);
+
 
     let [statusCode, setStatusCode] = React.useState(null);
 
@@ -26,17 +29,7 @@ function Classroom() {
 
     React.useEffect(() => {
 
-        (async () => {
-            try {
-                setLoading(true)
-                const res = await axios.get(`/c/${id}`);
-                setCls(res.data);
-                setLoading(false);
-            } catch (er) {
-                console.log('er', er);
-                setLoading(false);
-            }
-        })();
+        dispatch(fetchClassroom(`/c/${id}`));
 
 
     }, []);
@@ -47,7 +40,7 @@ function Classroom() {
 
 
     return (
-        <ErrorWrapper status={statusCode}>
+        <ErrorWrapper status={error.statusCode}>
             <Paper elevation={2} sx={{height: '200px', position: 'relative'}}>
 
                 <Typography sx={{position: 'absolute', bottom: 5, left: 10}} variant={'h2'}>{cls.name}</Typography>
