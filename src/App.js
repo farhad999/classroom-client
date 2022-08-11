@@ -25,6 +25,8 @@ import ClassWorkItem from "./pages/classroom/classwork/ClassWorkItem";
 import TestPage from "./pages/test/TestPage";
 import Submissions from "./pages/classroom/classwork/Submissions";
 import ClassWorkDetails from "./pages/classroom/classwork/ClassWorkDetails";
+import GroupList from "./pages/group/GroupList";
+import Group from "./pages/group/Group";
 
 function App() {
 
@@ -80,6 +82,13 @@ function App() {
                         </Route>
                         <Route path={'/c/:id/w'} element={<ClassWork/>}/>
                         <Route path={'/c/:id'} element={<Classroom/>}/>
+
+                        {/* Group */}
+
+                        <Route path={'/g/:id'} element={<Group />} />
+
+                        <Route path={'/g'} element={<GroupList /> } />
+
                         <Route path={'/'} element={<Dashboard/>}/>
                     </Route>
                 </Routes>

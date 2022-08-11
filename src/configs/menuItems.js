@@ -45,5 +45,9 @@ export const menuItems = [
         title: 'Classes',
         url: '/classes',
         ac: {userType: ['teacher', 'student']},
+    }, {
+        id: 'groups',
+        title: 'Groups',
+        url: '/g',
     }
 ]
