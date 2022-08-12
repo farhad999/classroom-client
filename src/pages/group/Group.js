@@ -21,6 +21,7 @@ import {toast} from "react-toastify";
 import {queryParams} from "../../utils/queryParams";
 import {ContentCopy, Add} from "@mui/icons-material";
 import {CustomDialogTitle} from "../../components/MuiCustom/CustomDialogTitle";
+import ErrorWrapper from "../../components/ErrorWrapper";
 
 function Group() {
 
@@ -40,7 +41,7 @@ function Group() {
 
     const navigate = useNavigate();
 
-    const {loading, group, accessInfo} = useSelector(state => state.group);
+    const {loading, group, accessInfo, error} = useSelector(state => state.group);
 
     const [openInviteDialog, setOpenInviteDialog] = React.useState(false);
 
@@ -85,7 +86,7 @@ function Group() {
     }
 
     return (
-        <div>
+        <ErrorWrapper status={error.statusCode}>
             <Paper elevation={1}>
                 <Stack>
                     <Box>
@@ -175,7 +176,7 @@ function Group() {
                 </DialogContent>
             </Dialog>
 
-        </div>
+        </ErrorWrapper>
     )
 }
 
