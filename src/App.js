@@ -28,6 +28,7 @@ import ClassWorkDetails from "./pages/classroom/classwork/ClassWorkDetails";
 import GroupList from "./pages/group/GroupList";
 import Group from "./pages/group/Group";
 import GroupPosts from "./pages/group/GroupPosts";
+import MemberList from "./pages/group/MemberList";
 
 function App() {
 
@@ -87,6 +88,7 @@ function App() {
                         {/* Group */}
 
                         <Route path={'/g/:id'} element={<Group />} >
+                            <Route path={'/g/:id/members'} element={<MemberList/>} />
                             <Route path={'/g/:id'} element={<GroupPosts />} />
                         </Route>
 
