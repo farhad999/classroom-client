@@ -1,5 +1,5 @@
 import React from "react";
-import {useParams, Link, useNavigate} from "react-router-dom";
+import {useParams, Link, useNavigate, Outlet} from "react-router-dom";
 import axios from "axios";
 import {
     Box,
@@ -142,6 +142,10 @@ function Group() {
                     </Box>
                 </Stack>
             </Paper>
+
+            <Box py={2}>
+                <Outlet />
+            </Box>
 
             <Dialog open={openInviteDialog} onClose={() => setOpenInviteDialog(false)}
                     maxWidth={'xs'}
