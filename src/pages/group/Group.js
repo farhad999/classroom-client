@@ -7,7 +7,7 @@ import {
     Dialog,
     DialogContent,
     DialogTitle,
-    Divider,
+    Divider, Menu, MenuItem,
     Paper,
     Stack,
     Tab,
@@ -45,6 +45,17 @@ function Group() {
 
     const [openInviteDialog, setOpenInviteDialog] = React.useState(false);
 
+    //handling menu
+
+    const [anchorEl, setAnchorEl] = React.useState(null);
+    const open = Boolean(anchorEl);
+    const handleClick = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
     React.useEffect(() => {
         dispatch(fetchGroup(`/g/${id}`));
     }, []);
@@ -56,27 +67,27 @@ function Group() {
 
     const joinRequest = () => {
 
-        let url = code ? `/g/${id}/join?code=${code}` :  `/g/${id}/join`;
+        let url = code ? `/g/${id}/join?code=${code}` : `/g/${id}/join`;
 
         dispatch(sendOrCancelJoinRequest(url))
-            .then(res=> {
+            .then(res => {
                 let {status, message} = res.payload;
 
                 console.log("status", status);
 
-                if(status === 'success'){
-                    if(code){
+                if (status === 'success') {
+                    if (code) {
                         navigate(`/g/${id}`)
                         toast.success('Joined Successful');
-                    }else{
+                    } else {
                         toast.success(message);
                     }
 
-                }else{
+                } else {
                     console.log('message');
                     toast.warn(message)
                 }
-            }).catch(er=>console.log(er));
+            }).catch(er => console.log(er));
     }
 
     if (loading) {
@@ -84,6 +95,7 @@ function Group() {
             loading
         </div>
     }
+
 
     return (
         <ErrorWrapper status={error.statusCode}>
@@ -101,11 +113,15 @@ function Group() {
 
                                 {
                                     accessInfo.isMember ?
-                                        <Button startIcon={<Add />}  variant={'contained'}
-                                                onClick={() => setOpenInviteDialog(true)}>Invite</Button>
+                                        <Stack direction={'row'}>
+                                            <Button onClick={handleClick} variant={'contained'}
+                                                    color={'grey'}>Options</Button>
+                                            <Button startIcon={<Add/>} variant={'contained'}
+                                                    onClick={() => setOpenInviteDialog(true)}>Invite</Button>
+                                        </Stack>
                                         :
                                         code ? <Button variant={'contained'}
-                                            onClick={joinRequest}
+                                                       onClick={joinRequest}
                                             >Accept Invite</Button>
                                             :
                                             <Button onClick={joinRequest}
@@ -143,25 +159,36 @@ function Group() {
                 </Stack>
             </Paper>
 
+            <Menu open={open}
+                  anchorEl={anchorEl}
+                  onClose={handleClose}
+            >
+                {accessInfo.isAdmin &&
+                    <MenuItem onClick={handleClose} component={Link} to={`/g/${id}/requests`}>Requests</MenuItem>
+                }
+                <Divider />
+                <MenuItem>Leave Group</MenuItem>
+            </Menu>
+
             <Box py={2}>
-                <Outlet />
+                <Outlet/>
             </Box>
 
             <Dialog open={openInviteDialog} onClose={() => setOpenInviteDialog(false)}
                     maxWidth={'xs'}
                     fullWidth={true}
             >
-                <CustomDialogTitle onClose={()=>setOpenInviteDialog(false)}>
+                <CustomDialogTitle onClose={() => setOpenInviteDialog(false)}>
                     <Typography textAlign={'center'} variant={'h4'}>Invite your classmates</Typography>
-                    <Divider />
+                    <Divider/>
                 </CustomDialogTitle>
 
-                <Divider />
+                <Divider/>
 
                 <DialogContent>
 
                     <Stack direction={'row'} justifyContent={'space-between'}>
-                        <Typography  variant={'h5'}>Invite Code</Typography>
+                        <Typography variant={'h5'}>Invite Code</Typography>
                         <Typography letterSpacing={1.5} variant={'h5'}>{group.invitationCode}</Typography>
                     </Stack>
 
@@ -174,7 +201,8 @@ function Group() {
                                    }}
                                    fullWidth={true}
                         />
-                        <Button startIcon={<ContentCopy /> } onClick={() => copyToClipBoard(`${host}/g/${id}?code=${group.invitationCode}`)}
+                        <Button startIcon={<ContentCopy/>}
+                                onClick={() => copyToClipBoard(`${host}/g/${id}?code=${group.invitationCode}`)}
                                 variant={'contained'}>Copy</Button>
                     </Stack>
                 </DialogContent>
