@@ -47,7 +47,7 @@ function Classroom() {
             </Paper>
 
             <Box>
-                <Button>Posts</Button>
+                <Button component={Link} to={`/c/${id}`}>Posts</Button>
                 <Button component={Link} to={`/c/${id}/att`}>Attendances</Button>
                 <Button component={Link} to={`/c/${id}/w`}>ClassWork</Button>
                 <Button component={Link} to={`/c/${id}/participants`}>Participants</Button>
