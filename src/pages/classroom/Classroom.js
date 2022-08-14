@@ -8,8 +8,7 @@ import {
     Typography
 } from "@mui/material";
 import ErrorWrapper from "../../components/ErrorWrapper";
-import Posts from "./Posts";
-import {Link} from 'react-router-dom'
+import {Link, Outlet} from 'react-router-dom'
 import {fetchClassroom} from "../../store/slices/classroomSlice";
 import {useDispatch, useSelector} from "react-redux";
 
@@ -49,13 +48,12 @@ function Classroom() {
 
             <Box>
                 <Button>Posts</Button>
-                <Button>Chats</Button>
                 <Button component={Link} to={`/c/${id}/att`}>Attendances</Button>
                 <Button component={Link} to={`/c/${id}/w`}>ClassWork</Button>
+                <Button component={Link} to={`/c/${id}/participants`}>Participants</Button>
             </Box>
 
-            <Posts/>
-
+            <Outlet />
 
         </ErrorWrapper>
     )

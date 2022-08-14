@@ -30,6 +30,8 @@ import Group from "./pages/group/Group";
 import GroupPosts from "./pages/group/GroupPosts";
 import MemberList from "./pages/group/MemberList";
 import Requests from "./pages/group/Requests";
+import Posts from "./pages/classroom/Posts";
+import Participants from "./pages/classroom/Participants";
 
 function App() {
 
@@ -77,24 +79,28 @@ function App() {
                         <Route path={'/routines/:id'} element={<RoutineViewer/>}/>
                         <Route path={'/routines'} element={<Routines/>}/>
                         <Route path={'/classes'} element={<Classes/>}/>
-                        <Route path={'/c/:id/att'} element={<Attendances/>}/>
 
-                        <Route path={'/c/:id/w/:w'} element={<ClassWorkItem/>}>
-                            <Route path={'/c/:id/w/:w'} element={<ClassWorkDetails/>}/>
-                            <Route path={'/c/:id/w/:w/submissions'} element={<Submissions/>}/>
+
+                        <Route path={'/c/:id'} element={<Classroom/>}>
+                            <Route path={'/c/:id/att'} element={<Attendances/>}/>
+                            <Route path={'/c/:id/w'} element={<ClassWork/>}/>
+                            <Route path={'/c/:id/participants'} element={<Participants />} />
+                            <Route path={'/c/:id/w/:w'} element={<ClassWorkItem/>}>
+                                <Route path={'/c/:id/w/:w'} element={<ClassWorkDetails/>}/>
+                                <Route path={'/c/:id/w/:w/submissions'} element={<Submissions/>}/>
+                            </Route>
+                            <Route path={'/c/:id'} element={<Posts/>}/>
                         </Route>
-                        <Route path={'/c/:id/w'} element={<ClassWork/>}/>
-                        <Route path={'/c/:id'} element={<Classroom/>}/>
 
                         {/* Group */}
 
-                        <Route path={'/g/:id'} element={<Group />} >
-                            <Route path={'/g/:id/members'} element={<MemberList/>} />
-                            <Route path={'/g/:id/requests'} element={<Requests/>} />
-                            <Route path={'/g/:id'} element={<GroupPosts />} />
+                        <Route path={'/g/:id'} element={<Group/>}>
+                            <Route path={'/g/:id/members'} element={<MemberList/>}/>
+                            <Route path={'/g/:id/requests'} element={<Requests/>}/>
+                            <Route path={'/g/:id'} element={<GroupPosts/>}/>
                         </Route>
 
-                        <Route path={'/g'} element={<GroupList /> } />
+                        <Route path={'/g'} element={<GroupList/>}/>
 
                         <Route path={'/'} element={<Dashboard/>}/>
                     </Route>
