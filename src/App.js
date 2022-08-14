@@ -30,6 +30,8 @@ import Group from "./pages/group/Group";
 import GroupPosts from "./pages/group/GroupPosts";
 import MemberList from "./pages/group/MemberList";
 import Requests from "./pages/group/Requests";
+import ChatList from "./pages/ChatList";
+import Conversation from "./pages/Conversation";
 
 function App() {
 
@@ -85,6 +87,12 @@ function App() {
                         </Route>
                         <Route path={'/c/:id/w'} element={<ClassWork/>}/>
                         <Route path={'/c/:id'} element={<Classroom/>}/>
+
+                        {/* Messaging */}
+
+                        <Route path={'/m/:id'} element={<Conversation />} />
+
+                        <Route path={'/m'} element={<ChatList /> } />
 
                         {/* Group */}
 

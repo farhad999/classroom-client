@@ -49,5 +49,9 @@ export const menuItems = [
         id: 'groups',
         title: 'Groups',
         url: '/g',
+    }, {
+        id: 'chats',
+        title: 'Chats',
+        url: '/m',
     }
 ]
