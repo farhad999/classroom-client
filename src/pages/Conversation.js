@@ -1,5 +1,9 @@
 import React from 'react'
-import {Box, Container, Divider, IconButton, Skeleton, Stack, TextField, Typography} from "@mui/material";
+import {
+    Box, Container, Divider, IconButton,
+    Skeleton, Stack, TextField, Typography,
+    CircularProgress
+} from "@mui/material";
 import {ArrowBack, ArrowForward, ArrowRight, MoreHoriz, Send} from "@mui/icons-material";
 import axios from "axios";
 import {useParams} from "react-router-dom";
@@ -7,6 +11,8 @@ import MessageBubble from "../components/MessageBubble";
 import {useSelector} from "react-redux";
 import {nanoid} from "nanoid";
 import moment from 'moment'
+import InfiniteScroll from "react-infinite-scroll-component";
+
 
 function Conversation() {
 
@@ -16,11 +22,13 @@ function Conversation() {
 
     const [typedMessage, setTypedMessage] = React.useState("");
 
-    const [conversation, setConversation] = React.useState(null);
+    const [conversationDetails, setConversationDetails] = React.useState(null);
 
     const [messages, setMessages] = React.useState([]);
 
-    const [messagePage, setMessagePage] = React.useState(1);
+    //const [messagePage, setMessagePage] = React.useState(null);
+
+    const [paginationData, setPaginationData] = React.useState(null);
 
     const [loading, setLoading] = React.useState(true);
 
@@ -34,7 +42,7 @@ function Conversation() {
             createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
         };
 
-        setMessages(prev => [...prev, {...message, senderId: user.id}]);
+        setMessages(prev => [{...message, senderId: user.id}, ...prev]);
 
         setTypedMessage("");
 
@@ -47,26 +55,35 @@ function Conversation() {
             }).catch(er => console.log(er))
     }
 
-    React.useEffect(() => {
+    const fetchMessage = (data) => {
 
-        axios.get(`/m/${id}?page${messagePage}`)
+        console.log('nxt', data);
+
+        let page;
+
+        if (!paginationData) {
+            page = 1;
+        } else {
+            page = paginationData.currentPage + 1;
+        }
+
+        axios.get(`/m/${id}?page=${page}`)
             .then(res => {
-                let {conversation, messages} = res.data;
+                let {conversation, messageData} = res.data;
                 setLoading(false);
-                setConversation(conversation);
-                setMessages(messages.data);
-                scrollToBottom();
+
+                if (!conversationDetails) {
+                    setConversationDetails(conversation);
+                }
+                setMessages([...messages, ...messageData.data]);
+                setPaginationData(messageData.pagination);
 
             }).catch(er => console.log(er));
+    }
 
+    React.useEffect(() => {
+        fetchMessage();
     }, []);
-
-    const scrollToBottom = () => {
-        console.log('scroll');
-        endBubbleRef.current.scrollIntoView({behavior: "smooth"});
-    };
-
-    React.useEffect(scrollToBottom, [messages]);
 
     function detectKey(event) {
         if (event.keyCode === 13) {
@@ -91,7 +108,7 @@ function Conversation() {
                     {loading ?
                         <Skeleton variant={'rectangular'} sx={{width: '40%', height: '20px'}}/>
                         :
-                        <Typography variant={'h4'}>{conversation.name}</Typography>
+                        <Typography variant={'h4'}>{conversationDetails.name}</Typography>
                     }
 
                     <IconButton>
@@ -102,20 +119,41 @@ function Conversation() {
                 <Divider/>
             </Box>
 
+            <Box id={'message-container'} sx={{
+                flex: '1 1 auto',
+                position: 'relative',
+                overflowY: 'auto',
+                display: 'flex',
+                flexDirection: 'column-reverse'
+            }}>
 
-            <Box sx={{flex: '1 1 auto', position: 'relative', overflowY: 'auto'}}>
-                {messages.map((message, index) => (
-                    <MessageBubble
-                        isSent={user.id === message.senderId}
-                        message={message}/>
+                <InfiniteScroll
+                    inverse={true}
+                    next={fetchMessage}
+                    hasMore={paginationData ? paginationData.lastPage !== paginationData.currentPage : true}
+                    loader={<CircularProgress/>}
+                    dataLength={messages.length}
+                    scrollableTarget={'message-container'}
+                    style={{display: 'flex', flexDirection: 'column-reverse'}}
+                    endMessage={
+                        <p style={{textAlign: 'center'}}>
+                            <b>No more messages</b>
+                        </p>
+                    }
 
-                ))}
-                <Box ref={endBubbleRef}></Box>
+                >
+                    {messages.map((message, index) => (
+                        <MessageBubble
+                            key={message.id}
+                            isSent={user.id === message.senderId}
+                            message={message}/>
+
+                    ))}
+                    <Box ref={endBubbleRef}></Box>
+
+
+                </InfiniteScroll>
             </Box>
-
-
-
-
             <Stack direction={'row'} alignItems={'center'} sx={{flex: '0 0 auto'}}>
                 <TextField label={'Type a message'}
                            onKeyDown={detectKey}
