@@ -2,30 +2,32 @@ import React from 'react'
 import {Divider, Stack, Typography} from '@mui/material'
 import axios from "axios";
 import {Link} from 'react-router-dom'
+//import {socket} from "../utils/socket";
 
-function ChatList(){
+function ChatList() {
 
     const [loading, setLoading] = React.useState(true);
     const [chats, setChats] = React.useState([]);
 
-    React.useEffect(()=> {
+    React.useEffect(() => {
         axios.get('/m')
-            .then(res=> {
+            .then(res => {
                 setLoading(false);
                 setChats(res.data);
                 console.log('data', res.data);
-            }).catch(er=>console.log(er));
+            }).catch(er => console.log(er));
+
     }, [])
 
-    if(loading){
+    if (loading) {
         return <div>loading...</div>
     }
 
-    return(
+    return (
         <div>
             <Typography>Messages</Typography>
 
-            {chats.map((chat)=> (
+            {chats.map((chat) => (
                 <Link to={`/m/${chat.id}`}>
                     {chat.name}
                 </Link>

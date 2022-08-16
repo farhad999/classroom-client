@@ -12,6 +12,8 @@ import {useSelector} from "react-redux";
 import {nanoid} from "nanoid";
 import moment from 'moment'
 import InfiniteScroll from "react-infinite-scroll-component";
+import {io} from "socket.io-client";
+
 
 
 function Conversation() {
@@ -50,7 +52,8 @@ function Conversation() {
             .then(res => {
                 let {status} = res.data;
                 if (status === 'success') {
-
+                  //  socket.emit('sendMessage', {message: {...message, senderId: user.id}});
+                    console.log('message sent');
                 }
             }).catch(er => console.log(er))
     }
@@ -83,6 +86,21 @@ function Conversation() {
 
     React.useEffect(() => {
         fetchMessage();
+
+        /*socket.connect();
+
+        socket.emit('message', {conversationId: id},  ()=> {
+
+        });
+
+        socket.on('broadcastMessage', (data)=> {
+            console.log('data', data);
+        })*/
+
+        /*return ()=> {
+            socket.off('broadcastMessage');
+        }*/
+
     }, []);
 
     function detectKey(event) {
