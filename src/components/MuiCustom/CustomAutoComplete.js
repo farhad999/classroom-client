@@ -3,7 +3,7 @@ import {Autocomplete, CircularProgress, TextField} from "@mui/material";
 import PropTypes from "prop-types";
 import axios from "axios";
 
-function CustomAutoComplete({url, value, onSelect, inputLabel, setOptionLabel}) {
+function CustomAutoComplete({url, value, onSelect, inputLabel, setOptionLabel, disabled}) {
 
     const [open, setOpen] = React.useState(false);
 
@@ -29,6 +29,7 @@ function CustomAutoComplete({url, value, onSelect, inputLabel, setOptionLabel}) 
         <Autocomplete
             fullWidth={true}
             open={open}
+            disabled={disabled}
             onOpen={() => {
                 setOpen(true);
             }}
@@ -69,6 +70,11 @@ CustomAutoComplete.protoTypes = {
     onSelect: PropTypes.func,
     inputLabel: PropTypes.string,
     setOptionLabel: PropTypes.func.isRequired,
+    disabled: PropTypes.bool,
+}
+
+CustomAutoComplete.defaultProps = {
+    disabled: false,
 }
 
 export default CustomAutoComplete;
