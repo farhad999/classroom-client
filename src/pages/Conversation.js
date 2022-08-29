@@ -12,9 +12,7 @@ import {useSelector} from "react-redux";
 import {nanoid} from "nanoid";
 import moment from 'moment'
 import InfiniteScroll from "react-infinite-scroll-component";
-import {io} from "socket.io-client";
-
-
+import {socket} from "../utils/socket";
 
 function Conversation() {
 
@@ -52,15 +50,21 @@ function Conversation() {
             .then(res => {
                 let {status} = res.data;
                 if (status === 'success') {
-                  //  socket.emit('sendMessage', {message: {...message, senderId: user.id}});
+                    socket.emit('sendMessage', {
+                        message: {
+                            ...message,
+                            senderId: user.id,
+                            firstName: user.firstName,
+                            lastName: user.lastName,
+                        },
+                        conversationId: id,
+                    });
                     console.log('message sent');
                 }
             }).catch(er => console.log(er))
     }
 
     const fetchMessage = (data) => {
-
-        console.log('nxt', data);
 
         let page;
 
@@ -87,26 +91,40 @@ function Conversation() {
     React.useEffect(() => {
         fetchMessage();
 
-        /*socket.connect();
-
-        socket.emit('message', {conversationId: id},  ()=> {
+        socket.emit('chat-room', {conversationId: id, user: user}, () => {
 
         });
 
-        socket.on('broadcastMessage', (data)=> {
-            console.log('data', data);
-        })*/
+        socket.on('message', (data) => {
 
-        /*return ()=> {
-            socket.off('broadcastMessage');
-        }*/
+            let {message} = data;
+
+            setMessages(prev => [{
+                ...message,
+            }, ...prev]);
+
+            // setPaginationData(prev => )
+
+            console.log('data', data);
+        })
+
+        socket.on('notification', (data) => {
+            console.log('notification', data);
+        });
+
+        return () => {
+            socket.emit('leave-chat-room', {conversationId: id}, () => {
+
+            })
+            socket.off('message');
+            socket.off('notification');
+        }
 
     }, []);
 
     function detectKey(event) {
         if (event.keyCode === 13) {
             sendMessage();
-
         }
     }
 
@@ -164,7 +182,9 @@ function Conversation() {
                         <MessageBubble
                             key={message.id}
                             isSent={user.id === message.senderId}
-                            message={message}/>
+                            message={message}
+                            senderName={message.firstName}
+                        />
 
                     ))}
                     <Box ref={endBubbleRef}></Box>
