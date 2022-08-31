@@ -32,6 +32,7 @@ import MemberList from "./pages/group/MemberList";
 import Requests from "./pages/group/Requests";
 import Posts from "./pages/classroom/Posts";
 import Participants from "./pages/classroom/Participants";
+import About from "./pages/group/About";
 
 function App() {
 
@@ -97,6 +98,7 @@ function App() {
                         <Route path={'/g/:id'} element={<Group/>}>
                             <Route path={'/g/:id/members'} element={<MemberList/>}/>
                             <Route path={'/g/:id/requests'} element={<Requests/>}/>
+                            <Route path={'/g/:id/about'} element={<About /> } />
                             <Route path={'/g/:id'} element={<GroupPosts/>}/>
                         </Route>
 

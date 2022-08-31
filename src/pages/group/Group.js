@@ -148,6 +148,8 @@ function Group() {
                                     />
                                     <Tab value={`/g/${id}/members`} label={'Members'}
                                          component={Link} to={`/g/${id}/members`}/>
+                                    <Tab value={`/g/${id}/about`} label={'About'}
+                                         component={Link} to={`/g/${id}/about`}/>
 
                                 </Tabs>
 
