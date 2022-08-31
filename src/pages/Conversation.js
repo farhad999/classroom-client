@@ -128,11 +128,31 @@ function Conversation() {
         }
     }
 
+    const isSentMessage = (message) => {
+        return user.id === message.senderId;
+    }
+
+
+    const isGrouped = (index) => {
+
+        if (index < messages.length - 1) {
+
+            //inverted
+            //started from latest message
+
+            let currentMessage = messages[index];
+            let prevMessage = messages[index + 1];
+
+            return currentMessage.senderId === prevMessage.senderId;
+        }
+        return false;
+    }
+
+
     return (
 
 
         <Box sx={{display: 'flex', flexDirection: 'column', height: 'calc(100vh - 100px);'}}>
-
 
             <Box sx={{flex: '0 0 auto'}}>
                 <Stack py={1} direction={'row'} justifyContent={'space-between'}
@@ -155,12 +175,17 @@ function Conversation() {
                 <Divider/>
             </Box>
 
+
             <Box id={'message-container'} sx={{
                 flex: '1 1 auto',
                 position: 'relative',
                 overflowY: 'auto',
                 display: 'flex',
-                flexDirection: 'column-reverse'
+                flexDirection: 'column-reverse',
+                px: 4,
+                py:2,
+
+
             }}>
 
                 <InfiniteScroll
@@ -178,20 +203,25 @@ function Conversation() {
                     }
 
                 >
-                    {messages.map((message, index) => (
-                        <MessageBubble
-                            key={message.id}
-                            isSent={user.id === message.senderId}
-                            message={message}
-                            senderName={message.firstName}
-                        />
 
+                    {messages.map((message, index) => (
+                        <Box textTransform={'capitalize'} key={message.id}>
+                            <MessageBubble
+                                isGrouped={isGrouped(index)}
+                                isSent={isSentMessage(message)}
+                                message={message}
+                                senderName={message.firstName}
+                            />
+                        </Box>
                     ))}
+
+
                     <Box ref={endBubbleRef}></Box>
 
 
                 </InfiniteScroll>
             </Box>
+
             <Stack direction={'row'} alignItems={'center'} sx={{flex: '0 0 auto'}}>
                 <TextField label={'Type a message'}
                            onKeyDown={detectKey}
