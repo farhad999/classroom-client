@@ -33,6 +33,10 @@ import Requests from "./pages/group/Requests";
 import Posts from "./pages/classroom/Posts";
 import Participants from "./pages/classroom/Participants";
 import About from "./pages/group/About";
+import QuestionAndAnswers from "./pages/group/QuestionAndAnswers";
+import QuestionViewer from "./pages/QuestionViewer";
+import 'react-quill/dist/quill.snow.css';
+import AskQuestion from "./pages/AskQuestion";
 
 function App() {
 
@@ -99,6 +103,9 @@ function App() {
                             <Route path={'/g/:id/members'} element={<MemberList/>}/>
                             <Route path={'/g/:id/requests'} element={<Requests/>}/>
                             <Route path={'/g/:id/about'} element={<About /> } />
+                            <Route path={'/g/:id/q/:qId'} element={<QuestionViewer />} />
+                            <Route path={'/g/:id/q/ask'} element={<AskQuestion /> } />
+                            <Route path={'/g/:id/q'} element={<QuestionAndAnswers /> } />
                             <Route path={'/g/:id'} element={<GroupPosts/>}/>
                         </Route>
 
