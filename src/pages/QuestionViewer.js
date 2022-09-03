@@ -47,7 +47,6 @@ function QuestionViewer() {
     return (
         <div>
 
-
             <Box my={1}>
                 <Typography textTransform={'capitalize'} variant={'h4'}>{question.title}</Typography>
                 <Stack>

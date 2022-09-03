@@ -9,15 +9,17 @@ import {
     Paper,
     Card,
     CardHeader,
-    CardActions, Chip, Avatar
+    CardActions, Chip, Avatar, Autocomplete, createFilterOptions, CardContent
 } from "@mui/material";
 import {Controller, useForm} from "react-hook-form";
 import ReactQuill from "react-quill";
-import {FileUploadOutlined} from "@mui/icons-material";
+import {Add, FileUploadOutlined} from "@mui/icons-material";
 import axios from "axios";
 import {Link, useParams} from "react-router-dom";
 import {toast} from "react-toastify";
 import moment from "moment";
+
+const filter = createFilterOptions();
 
 function AskQuestion() {
 
@@ -29,13 +31,17 @@ function AskQuestion() {
 
     const [questions, setQuestions] = React.useState([]);
 
+    const tags = [];
+
+    const [value, setValue] = React.useState("");
+
     const submitQuestion = (data) => {
 
         axios.post(`/q`, {...data, type: 'group', typeId: id})
             .then(res => {
                 let {status} = res.data;
 
-                if(status === 'success'){
+                if (status === 'success') {
                     toast.success('Question Posted');
                     reset({});
                     fetchQuestions();
@@ -47,16 +53,16 @@ function AskQuestion() {
 
     }
 
-    const fetchQuestions = () =>{
+    const fetchQuestions = () => {
         axios.get(`/q?type=group&typeId=${id}&ref=my`)
-            .then(res=> {
-                let {results} = res.data;
-                setQuestions(results);
+            .then(res => {
+                const {data, pagination} = res.data;
+                setQuestions(data);
                 setLoading(false);
-            }).catch(er=>console.log(er));
+            }).catch(er => console.log(er));
     }
 
-    React.useEffect(()=> {
+    React.useEffect(() => {
         fetchQuestions();
     }, []);
 
@@ -71,8 +77,13 @@ function AskQuestion() {
         ],
     };
 
-    if(loading){
+    if (loading) {
         return <div>loading..</div>
+    }
+
+    const convertToSlug = (text) => {
+        return text.toLowerCase()
+            .replace(/ /g, '-');
     }
 
     return (
@@ -81,20 +92,81 @@ function AskQuestion() {
 
             <Box p={2} component={Paper}>
                 <form onSubmit={handleSubmit(submitQuestion)}>
-                    <Controller render={({field: {value, onChange}}) => (
-                        <TextField
-                            label={'Title'}
-                            onChange={(event) => onChange(event.target.value)}
-                            value={value}
-                            variant={'filled'}
-                            multiline={true}
-                            maxRows={2}
-                            fullWidth={true}
+                    <Box my={1}>
+                        <Controller render={({field: {value, onChange}}) => (
+                            <TextField
+                                label={'Title'}
+                                onChange={(event) => onChange(event.target.value)}
+                                value={value}
+                                variant={'outlined'}
+                                multiline={true}
+                                maxRows={2}
+                                fullWidth={true}
+                            />
+                        )} name={'title'} control={control}
                         />
-                    )} name={'title'} control={control}
+                    </Box>
+
+                    <Box my={1}>
+
+                        <Controller render={({field: {value, onChange}})=> (
+                            <Autocomplete
+                                multiple
+                                options={tags}
+                                getOptionLabel={(option) => option.name}
+                                onChange={(event, values) => {
+
+                                    if (values.length) {
+
+                                        let lastItem = values[values.length - 1];
+
+                                        if (lastItem.type === 'add') {
+
+                                            let label = lastItem.name;
+                                            //remove Add and quotes
+                                            label = label.slice(4).slice(1, -1);
+
+                                            lastItem.name = label;
+
+                                            delete lastItem.type;
+                                        }
+                                        console.log('values', values);
+                                    }
+                                    onChange(values);
+                                }}
+                                filterOptions={(options, params) => {
+
+                                    const filtered = filter(options, params);
+
+                                    const {inputValue} = params;
+
+                                    // Suggest the creation of a new value
+                                    const isExisting = options.some((option) => inputValue === option.label);
+                                    if (inputValue !== '' && !isExisting) {
+                                        filtered.push({
+                                            slug: convertToSlug(inputValue),
+                                            name: `Add "${inputValue}"`,
+                                            type: 'add'
+                                        });
+                                    }
+
+                                    return filtered;
+                                }}
+                                freeSolo
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        onChange={(event) => setValue(event.target.value)}
+                                        variant="outlined"
+                                        label="Tags"
+                                        placeholder="Add Tag"
+                                    />
+                                )}
+                            />
+                        )} name={'tags'} control={control} />
 
 
-                    />
+                    </Box>
 
                     <Typography py={1}>Description</Typography>
 
@@ -119,10 +191,25 @@ function AskQuestion() {
                     questions.map((q, index) => (
 
                         <Card my={2} key={index}>
-                            <CardHeader
-                                title={<Typography color={'primary'} component={Link} to={`/g/${id}/q/${q.id}`} textTransform={'capitalize'} variant={'h5'}>{q.title}</Typography>}/>
+
+                            <CardContent>
+                                <Typography color={'primary'} component={Link} to={`/g/${id}/q/${q.id}`}
+                                            textTransform={'capitalize'} variant={'h5'}>{q.title}</Typography>
+
+                                <Stack mt={2} direction={'row'} gap={1} >
+
+                                    {
+                                        q.tags.map((tag, index) => (
+                                            <Button key={index} variant="contained"> {tag.name} </Button>
+                                        ))
+                                    }
+
+                                </Stack>
+                            </CardContent>
+
                             <CardActions sx={{gap: 3}}>
-                                <Chip label={q.user.firstName+ ' '+q.user.lastName} variant="outlined" avatar={<Avatar>F</Avatar>} />
+                                <Chip label={q.user.firstName + ' ' + q.user.lastName} variant="outlined"
+                                      avatar={<Avatar>F</Avatar>}/>
                                 <Typography>{moment(q.createdAt).fromNow()}</Typography>
                                 <Typography>2 Answers </Typography>
                             </CardActions>
@@ -133,7 +220,6 @@ function AskQuestion() {
                 }
 
             </Box>
-
 
 
         </div>
