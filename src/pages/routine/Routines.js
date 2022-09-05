@@ -3,25 +3,24 @@ import {useForm, Controller} from "react-hook-form";
 import moment from "moment";
 import axios from "axios";
 import {toast} from "react-toastify";
-import {useNavigate} from 'react-router-dom'
 import {
-    Avatar, Badge,
+    Badge,
     Box,
     Button,
     Card,
     CardActions,
     CardContent, CardHeader,
-    Dialog,
-    DialogContent, FormControl, FormHelperText,
+    Dialog, DialogActions,
+    DialogContent, DialogTitle, FormControl, FormHelperText,
     Grid, IconButton, InputLabel, ListItemIcon, Menu, MenuItem, OutlinedInput, Select,
     Stack, TextField,
-    Typography
+    Typography, Icon
 } from "@mui/material";
 import {Link} from 'react-router-dom'
-import {Delete, Edit, MoreHoriz, PersonAdd, Settings, Sync} from '@mui/icons-material'
+import {Delete, Edit, MoreHoriz, Sync} from '@mui/icons-material'
 import {CustomDialogTitle} from "../../components/MuiCustom/CustomDialogTitle";
 import {LocalizationProvider} from '@mui/x-date-pickers/LocalizationProvider';
-import {DesktopTimePicker, MobileTimePicker} from "@mui/x-date-pickers";
+import {DesktopTimePicker} from "@mui/x-date-pickers";
 import {AdapterMoment} from '@mui/x-date-pickers/AdapterMoment'
 
 export default function Routines() {
@@ -32,6 +31,10 @@ export default function Routines() {
 
     const [routines, setRoutines] = React.useState([]);
 
+    const [semesters, setSemesters] = React.useState([]);
+
+    const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
+
     //routine context menu
 
     const [anchorEl, setAnchorEl] = React.useState(null);
@@ -39,14 +42,18 @@ export default function Routines() {
 
     //form
 
+    const formDefaultValues = {
+        name: moment().format('MMMM-YYYY'),
+        status: 'draft',
+        startTime: null,
+        periodLength: '',
+        isActive: false,
+        type: 'simple',
+        offDays: '',
+    };
+
     const {handleSubmit, control, reset, formState: {errors}} = useForm({
-        defaultValues: {
-            name: moment().format('MMMM-YYYY'),
-            status: '',
-            startTime: null,
-            periodLength: '',
-            isActive: false,
-        }
+        defaultValues: formDefaultValues
     });
 
     //options
@@ -65,10 +72,30 @@ export default function Routines() {
         value: 'final',
     }];
 
+    //routine types
+
+    const routineTypes = [{
+        name: 'Simple',
+        value: 'simple',
+    }, {
+        name: 'Priority Based',
+        value: 'priority'
+    }];
+
+    const days = [
+        {name: 'SAT', value: 'sat'},
+        {name: 'SUN', value: 'sun'},
+        {name: 'MON', value: 'mon'},
+        {name: 'TUE', value: 'tue'},
+        {name: 'WED', value: 'wed'},
+        {name: 'THU', value: 'thu'},
+        {name: 'FRI', value: 'fri'},
+    ];
+
     const fetchData = () => {
         axios.get('/routines')
             .then(res => {
-                let {data, pagination} = res.data;
+                let {data} = res.data;
                 setRoutines(data);
                 setLoading(false);
             }).catch(er => console.log("er", er));
@@ -77,6 +104,12 @@ export default function Routines() {
     React.useEffect(() => {
 
         fetchData();
+
+        axios.get('semesters')
+            .then(res => {
+                const {semesters} = res.data;
+                setSemesters(semesters);
+            }).catch(er => console.log(er));
 
     }, []);
 
@@ -91,44 +124,34 @@ export default function Routines() {
 
     const addOrUpdate = (data) => {
 
-        console.log('data', data);
+        data.startTime = moment(data.startTime).format('HH:mm');
+        data.endTime = moment(data.endTime).format('HH:mm');
+        data.breakTime=moment(data.breakStartTime).format('HH:mm')+'-'+moment(data.breakEndTime).format('HH:mm');
 
-        data.startTime = moment(data.startTime).format('HH:mm:ss');
+        delete data.breakStartTime;
+        delete data.breakEndTime;
 
         //let data for update
 
-        let {periodLength, ...rest} = data;
-
         if (selectedRoutine) {
-            axios.put(`routines/${selectedRoutine.id}`, rest)
-                .then(res => {
-                    let {status} = res.data;
-                    if (status === 'success') {
-                        toast.success('Routine Updated');
-                        let r = [...routines];
-                        let index = r.findIndex(item => item.id === selectedRoutine.id);
-
-                        r[index] = {...r[index], ...data};
-
-                        setRoutines(r);
-
-                        setShowModal(false);
-                    }
-                }).catch(er => console.log(er));
-        } else {
-
-            axios.post('/routines', data)
-                .then(res => {
-                    let {status} = res.data;
-
-                    if (status === 'success') {
-                        fetchData();
-                        toast.success('Routine Added');
-                        setShowModal(false);
-                    }
-
-                }).catch(er => console.log(er));
+            data.id = selectedRoutine.id;
         }
+
+        console.log('data',data);
+
+        axios.post('/routines', data)
+            .then(res => {
+
+                let {status, message} = res.data;
+
+                if (status === 'success') {
+                    fetchData();
+                    toast.success(message);
+                    setShowModal(false);
+                }
+
+            }).catch(er => console.log(er));
+
     }
 
     const activateOrDeactivate = () => {
@@ -148,17 +171,35 @@ export default function Routines() {
 
 
     const openAddModal = () => {
-        reset({});
+        reset(formDefaultValues);
         setShowModal(true);
         setSelectedRoutine(null);
     }
 
     const selectAndOpenModal = () => {
         let item = routines.find(item => item.id === selectedRoutine.id);
-        let {name, status, periodLength, startTime} = item;
-        reset({name, status, periodLength, startTime: moment(startTime, 'HH:mm:ss')});
+        let {name, status, periodLength, startTime,
+            type, offDays, semesters, endTime, breakTime} = item;
+        reset({name, status, periodLength,
+            type, offDays, semesters,
+            startTime: moment(startTime, 'HH:mm:ss'),
+            endTime: moment(endTime, 'HH:mm:ss'),
+            breakStartTime: moment(breakTime.split('-')[0], 'HH:mm'),
+            breakEndTime: moment(breakTime.split('-')[1], 'HH:mm'),
+        });
         setShowModal(true);
 
+    }
+
+    const deleteRoutine = () => {
+        axios.delete(`/routines/${selectedRoutine.id}/`)
+            .then(res=> {
+                const {status} = res.data;
+                if(status === 'success'){
+                    setRoutines(prev=>prev.filter(item=>item!==selectedRoutine.id));
+                    setOpenDeleteDialog(false);
+                }
+            }).catch(er=>console.log(er));
     }
 
     if (loading) {
@@ -186,7 +227,7 @@ export default function Routines() {
 
                             <Card>
 
-                                <CardHeader title={routine.name}
+                                <CardHeader title={<Typography textTransform={'capitalize'} variant={'h5'}>{routine.name}</Typography> }
                                             action={<IconButton onClick={(event) => handleClick(event, routine)}>
                                                 <MoreHoriz sx={{bgcolor: 'pallete.grey[100]'}} fontSize={'small'}/>
                                             </IconButton>}
@@ -198,22 +239,34 @@ export default function Routines() {
                                         <Badge color={'primary'} badgeContent={routine.isActive && 'Active'}></Badge>
                                     </Box>
 
-                                    <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
+                                    <Box my={0.5} sx={{display: 'flex', justifyContent: 'space-between'}}>
                                         <Typography variant={'h5'}>Status</Typography>
                                         <Typography variant={'h6'}
                                                     textTransform={'capitalize'}>{routine.status}</Typography>
                                     </Box>
 
-                                    <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
+                                    <Box my={0.5} sx={{display: 'flex', justifyContent: 'space-between'}}>
+                                        <Typography variant={'h5'}>Type</Typography>
+                                        <Typography variant={'h6'}
+                                                    textTransform={'capitalize'}>{routine.type}</Typography>
+                                    </Box>
+
+                                    <Box my={0.5} sx={{display: 'flex', justifyContent: 'space-between'}}>
                                         <Typography variant={'h5'}>Period Length</Typography>
                                         <Typography variant={'h6'}
                                                     textTransform={'capitalize'}>{routine.periodLength} Minutes</Typography>
                                     </Box>
 
-                                    <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
-                                        <Typography variant={'h5'}>Start Time</Typography>
+                                    <Box my={0.5} sx={{display: 'flex', justifyContent: 'space-between'}}>
+                                        <Typography variant={'h5'}>Class Time</Typography>
                                         <Typography variant={'h6'}
-                                                    textTransform={'capitalize'}>{routine.startTime}</Typography>
+                                                    textTransform={'capitalize'}>{moment(routine.startTime, 'HH:mm:ss').format('hh:mmA')+"-"+moment(routine.endTime, 'HH:mm:ss').format('hh:mmA')}</Typography>
+                                    </Box>
+
+                                    <Box my={0.5} sx={{display: 'flex', justifyContent: 'space-between'}}>
+                                        <Typography variant={'h5'}>Break Time</Typography>
+                                        <Typography variant={'h6'}
+                                                    textTransform={'capitalize'}>{moment(routine.breakTime.split('-')[0], 'HH:mm').format('hh:mmA')+"-"+moment(routine.breakTime.split('-')[1], 'HH:mm').format('hh:mmA')}</Typography>
                                     </Box>
 
                                 </CardContent>
@@ -235,8 +288,9 @@ export default function Routines() {
             <LocalizationProvider dateAdapter={AdapterMoment}>
 
                 <Dialog open={showModal} onClose={() => setShowModal(false)}
-                        maxWidth={'xs'}
+                        maxWidth={'sm'}
                         fullWidth={true}
+                        scroll={'body'}
                 >
 
                     <CustomDialogTitle onClose={() => setShowModal(false)}>
@@ -298,19 +352,165 @@ export default function Routines() {
 
                             />
 
+                            <Controller render={({field: {value, onChange}}) => (
+                                <FormControl fullWidth
+                                             margin={'normal'}
+                                             disabled={selectedRoutine?.isActive}
+                                >
+                                    <InputLabel>
+                                        Routine Type
+                                    </InputLabel>
+
+                                    <Select
+                                        label={'Routine Type'}
+                                        value={value}
+                                        onChange={(event) => onChange(event.target.value)}
+                                    >
+
+                                        {
+                                            routineTypes.map((option, index) => (
+                                                <MenuItem key={index} value={option.value}>{option.name}</MenuItem>
+                                            ))
+                                        }
+
+                                    </Select>
+
+                                    <FormHelperText error={!!errors?.type}>
+                                        {errors.type?.message}
+                                    </FormHelperText>
+
+                                </FormControl>
+                            )} name={'type'}
+                                        control={control}
+
+                            />
 
                             <Controller render={({field: {value, onChange}}) => (
-                                <DesktopTimePicker
-                                    label="Start Time"
-                                    value={value}
-                                    onChange={(value) => onChange(value)}
-                                    renderInput={(params) => <TextField {...params} fullWidth={true} />}
-                                />
-                            )} name={'startTime'} control={control}/>
+                                <FormControl fullWidth
+                                             margin={'normal'}
+                                    //  disabled={selectedRoutine?.isActive}
+                                >
+                                    <InputLabel>
+                                        Weekly Off Days
+                                    </InputLabel>
+
+                                    <Select
+                                        multiple={true}
+                                        label={'Weekly Off Days'}
+                                        value={value ? value.split(',') : []}
+                                        onChange={(event) => onChange(event.target.value.join(','))}
+                                    >
+
+                                        {
+                                            days.map((option, index) => (
+                                                <MenuItem key={index} value={option.value}>{option.name}</MenuItem>
+                                            ))
+                                        }
+
+                                    </Select>
+
+                                    <FormHelperText error={!!errors?.type}>
+                                        {errors.type?.message}
+                                    </FormHelperText>
+
+                                </FormControl>
+                            )} name={'offDays'}
+                                        control={control}
+
+                            />
+
+                            <Controller render={({field: {value, onChange}}) => (
+                                <FormControl fullWidth
+                                             margin={'normal'}
+                                    //  disabled={selectedRoutine?.isActive}
+                                >
+                                    <InputLabel>
+                                        Semesters
+                                    </InputLabel>
+
+                                    <Select
+                                        multiple={true}
+                                        label={'Semesters'}
+                                        value={value ? value.split(',') : []}
+                                        onChange={(event) => onChange(event.target.value.join(','))}
+                                    >
+
+                                        {
+                                            semesters.map((option, index) => (
+                                                <MenuItem key={index} value={`${option.id}`}>{option.shortName}</MenuItem>
+                                            ))
+                                        }
+
+                                    </Select>
+
+                                    <FormHelperText error={!!errors?.semesters}>
+                                        {errors.semesters?.message}
+                                    </FormHelperText>
+
+                                </FormControl>
+                            )} name={'semesters'}
+                                        control={control}
+
+                            />
+
+
+                            <Box my={2}>
+                                <Typography textAlign={'center'}>Routine Start and End Time</Typography>
+                            </Box>
+
+                            <Stack direction={'row'} gap={2}>
+
+                                <Controller render={({field: {value, onChange}}) => (
+                                    <DesktopTimePicker
+                                        label="Start Time"
+                                        value={value}
+                                        onChange={(value) => onChange(value)}
+                                        renderInput={(params) => <TextField {...params} fullWidth={true}/>}
+                                    />
+                                )} name={'startTime'} control={control}/>
+
+                                <Controller render={({field: {value, onChange}}) => (
+                                    <DesktopTimePicker
+                                        label="End Time"
+                                        value={value}
+                                        onChange={(value) => onChange(value)}
+                                        renderInput={(params) => <TextField {...params} fullWidth={true}/>}
+                                    />
+                                )} name={'endTime'} control={control}/>
+
+
+                            </Stack>
+
+                            <Box my={2}>
+                                <Typography textAlign={'center'}>Break Start and End Time</Typography>
+                            </Box>
+
+                            <Stack direction={'row'} gap={2}>
+
+                                <Controller render={({field: {value, onChange}}) => (
+                                    <DesktopTimePicker
+                                        label="Start Time"
+                                        value={value}
+                                        onChange={(value) => onChange(value)}
+                                        renderInput={(params) => <TextField {...params} fullWidth={true}/>}
+                                    />
+                                )} name={'breakStartTime'} control={control}/>
+
+                                <Controller render={({field: {value, onChange}}) => (
+                                    <DesktopTimePicker
+                                        label="End Time"
+                                        value={value}
+                                        onChange={(value) => onChange(value)}
+                                        renderInput={(params) => <TextField {...params} fullWidth={true}/>}
+                                    />
+                                )} name={'breakEndTime'} control={control}/>
+
+
+                            </Stack>
+
 
                             <Controller render={({field: {value, onChange}}) => (
                                 <FormControl
-                                    disabled={!!selectedRoutine}
                                     margin={'normal'}
                                     fullWidth={true}
                                 >
@@ -327,7 +527,6 @@ export default function Routines() {
                             )} name={'periodLength'}
                                         control={control}/>
 
-
                             <Box sx={{mt: 2}}>
                                 <Button variant={'contained'} fullWidth={true}
                                         type={'submit'}
@@ -342,6 +541,22 @@ export default function Routines() {
 
             </LocalizationProvider>
 
+            <Dialog open={openDeleteDialog}
+                    onClose={()=>setOpenDeleteDialog(false)}
+                    maxWidth={'xs'}
+                    fullWidth={true}
+            >
+                <DialogTitle><Typography variant={'h4'}>Delete This Routine</Typography></DialogTitle>
+                <DialogContent>
+                    This Routine will be deleted.
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={()=>setOpenDeleteDialog(false)}>Cancel</Button>
+                    <Button onClick={deleteRoutine} variant={'contained'} color={'warning'}>Delete</Button>
+                </DialogActions>
+
+            </Dialog>
+
             <Menu
                 anchorEl={anchorEl}
                 open={open}
@@ -353,19 +568,26 @@ export default function Routines() {
 
                 <MenuItem onClick={selectAndOpenModal}>
                     <ListItemIcon>
-                        <Edit fontSize="small"/>
+                        <Icon color={'primary'}>
+                            <Edit fontSize="small"/>
+                        </Icon>
                     </ListItemIcon>
                     Edit
                 </MenuItem>
                 <MenuItem onClick={activateOrDeactivate}>
                     <ListItemIcon>
-                        <Sync fontSize="small"/>
+                        <Icon color={'primary'}>
+                            <Sync fontSize="small"/>
+                        </Icon>
                     </ListItemIcon>
                     {selectedRoutine?.isActive ? 'Deactivate' : 'Activate'}
                 </MenuItem>
-                <MenuItem>
+
+                <MenuItem onClick={()=>setOpenDeleteDialog(true)}>
                     <ListItemIcon>
-                        <Delete color={'primary.warning'} fontSize="small"/>
+                        <Icon color={'error'}>
+                            <Delete fontSize="small"/>
+                        </Icon>
                     </ListItemIcon>
                     Delete
                 </MenuItem>
