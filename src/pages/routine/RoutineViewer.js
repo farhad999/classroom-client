@@ -29,6 +29,7 @@ import moment from "moment";
 import {DataGrid} from "@mui/x-data-grid";
 import {toast} from "react-toastify";
 import * as _ from 'lodash'
+import {useSelector} from "react-redux";
 
 export default function RoutineViewer() {
 
@@ -36,21 +37,30 @@ export default function RoutineViewer() {
 
     const [loading, setLoading] = React.useState(true);
 
-    //grouped
-
-    const [groupBySemesterWithClass, setGroupBySemesterWithClass] = React.useState([]);
-
     //select
     const [selectedClass, setSelectedClass] = React.useState(null);
 
+    const [selectedClassTime, setSelectedClassTime] = React.useState(null);
 
     //times
 
     const [times, setTimes] = React.useState([]);
 
+    const [routine, setRoutine] = React.useState(null);
+
+    const [routineDays, setRoutineDays] = React.useState([]);
+
+    const [classes, setClasses] = React.useState([]);
+
     //router
 
     let {id} = useParams();
+
+    //user
+
+    let {user} = useSelector(state => state.auth);
+
+    const [mode, setMode] = React.useState('read');
 
     //schema
 
@@ -74,14 +84,17 @@ export default function RoutineViewer() {
                 }))
     });
 
-
     //form
 
-    const {register, handleSubmit, control, reset, formState: {errors}} = useForm({
+    const {register, handleSubmit, control, reset, getValues, formState: {errors}} = useForm({
         defaultValues: {
             course: null,
-            teacher: null,
-            times: [{day: "", id: '', startTime: null, periods: ''}]
+            teacher: user.userType === 'teacher' ? {
+                id: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+            } : null,
+            times: [{day: "", startTime: null, periods: ''}]
         },
         resolver: yupResolver(formSchema)
     });
@@ -96,72 +109,118 @@ export default function RoutineViewer() {
 
     let colors = ['#1234ff', '#dd54ff', '#ff9912', '#dd0023', '#fdfd12', '#aa11ff'];
 
+    const availableSemesters = ['1-1', '2-1', '3-1', '4-1'];
+
     const fetchData = async () => {
-
-
-        let min = moment('8:00', 'HH:mm'); //moment.min(moments);
-        let max = moment('17:00', 'HH:mm'); //moment.max(moments);
-
 
         let times = [];
 
-        for (let start = min; moment(max).diff(moment(start), 'minutes') >= 0; start = moment(start).add(60, 'minutes')) {
-            times.push(start.format('hh:mm A'));
+        setLoading(true);
+
+        //async get data
+
+        let res = await axios.get(`/routines/${id}`);
+
+        let {routine, classes} = res.data;
+
+        setRoutine(routine);
+
+        let min = moment(routine.startTime, 'HH:mm:ss');
+        let max = moment(routine.endTime, 'HH:mm:ss');
+
+        let breakTime = routine.breakTime.split('-');
+
+        let breakStartTime = moment(breakTime[0], 'HH:mm');
+
+        let breakEndTime = moment(breakTime[1], 'HH:mm');
+
+        for (let start = min; moment(breakStartTime).diff(moment(start), 'minutes') >= 0; start = moment(start).add(60, 'minutes')) {
+            times.push(start.format('hh:mmA'));
+        }
+
+        for (let start = breakEndTime; moment(max).diff(moment(start), 'minutes') >= 60; start = moment(start).add(60, 'minutes')) {
+            times.push(start.format('hh:mmA'));
         }
 
         setTimes(times);
 
-        setLoading(true);
+        const routineDays = days.filter(item => {
 
-        let res = await axios.get(`/routines/${id}`);
+            let offDays = routine.offDays.split(',');
+            return !offDays.includes(item.value);
+        })
 
-        let data = res.data;
+        setRoutineDays(routineDays);
 
-        //group by semester
+        //main array
 
-        let groupBySemesters = _.groupBy(data, 'semesterName');
+        const arr = new Array(routineDays.length).fill(0).map(() => new Array(availableSemesters.length).fill(0).map(() => new Array(times.length).fill(0)));
 
-        //
-        let classGroupBySemesters = [];
+        //classes are grouped into days
 
-        for (let semester of Object.keys(groupBySemesters)) {
+        let groupByDays = _.groupBy(classes, 'day');
+
+        for (let day of Object.keys(groupByDays)) {
+
             let object = {};
-            let allCoursesForThisSemester = groupBySemesters[semester];
-            let groupByClass = _.groupBy(allCoursesForThisSemester, 'courseCode');
 
-            object.semesterName = semester;
-            object.groupByClass = groupByClass;
+            let allCoursesForThisDay = groupByDays[day];
+
+            //classes for a day into semester groups
+
+            let groupBySemester = _.groupBy(allCoursesForThisDay, 'shortName');
+
+            // object.semesterName = semester;
+            //  object.groupByClass = groupByClass;
             // classGroupBySemesters.push(object);
 
-            const arr = new Array(6).fill(0).map(() => new Array(times.length).fill(0));
+            //  const arr = new Array(6).fill(0).map(() => new Array(times.length).fill(0));
 
             let count = 0;
 
-            for (let classCode of Object.keys(groupByClass)) {
+            for (let semesterShortName of Object.keys(groupBySemester)) {
+
                 let color = getRandomColor();
-                for (let classTime of groupByClass[classCode]) {
-                    let dayIndex = days.findIndex(item => item.value === classTime.day);
+
+                let classesForEachSemester = groupBySemester[semesterShortName];
+
+
+                for (let classTime of classesForEachSemester) {
+
+                    console.log('classTime', classTime);
+
+                    let semesterIndex = availableSemesters.findIndex(item => item === classTime.shortName);
+
+                    console.log('semester index', semesterIndex);
+
+                    let dayIndex = routineDays.findIndex(item => item.value === classTime.day);
                     let timeIndex = times.findIndex((item) => moment(item, 'HH:mm A').isSame(moment(classTime.startTime, 'HH:mm:ss')));
-                    classTime.color = color; // colors[count];
-                    arr[dayIndex][timeIndex] = classTime;
+                    // classTime.color = color; // colors[count];
+                    //currently do not show that
+                    if (semesterIndex >= 0) {
+                        arr[dayIndex][semesterIndex][timeIndex] = classTime;
+                    }
+
                     if (classTime.periods > 1) {
-                        for (let i = 1; i < classTime.periods; i++) {
-                            arr[dayIndex][timeIndex + i] = {isSpanned: true, ...classTime};
+                        for (let i = 0; i < classTime.periods; i++) {
+                            if (i === 0) {
+                                arr[dayIndex][semesterIndex][timeIndex] = {isSpanable: true, ...classTime};
+                            } else {
+                                arr[dayIndex][semesterIndex][timeIndex + i] = {spanned: true};
+                            }
+
                         }
                     }
                 }
                 count++;
             }
 
-            object.classes = arr;
-
-            classGroupBySemesters.push(object);
         }
-
-
         setLoading(false);
 
-        setGroupBySemesterWithClass(classGroupBySemesters);
+        setClasses(arr);
+
+        console.log('array', arr);
     }
 
     React.useEffect(() => {
@@ -175,23 +234,51 @@ export default function RoutineViewer() {
 
         // let {times} = data;
 
+        console.log('data', data);
+
         data.times = data.times.map(time => {
             let tt = {};
             tt.startTime = moment(time.startTime, 'hh:mm A').format("HH:mm:ss");
             tt.periods = time.periods;
             tt.day = time.day;
             if (selectedClass) {
-                tt.id = time.id;
+                tt.id = selectedClass.classTimeId;
+                console.log('class is selected');
+
             }
             return tt;
         });
 
         let {times, course, teacher} = data;
 
+        console.log('times', times);
+
         let d = {times, courseId: course.id, teacherId: teacher.id}
 
         if (selectedClass) {
-            axios.put(`/routines/${id}/classes/${selectedClass}`, d)
+            d.id = selectedClass.id;
+        }
+
+        axios.post(`/routines/${id}/classes`, d)
+            .then(res => {
+                let {status, message} = res.data;
+                if (status === 'success') {
+                    toast.success(message);
+                    reset({});
+                    fetchData();
+                    setShowModal(false);
+                }
+                if (status === 'failed') {
+                    toast.error(message);
+                }
+
+            }).catch(er => console.log(er));
+
+        /*if (selectedClass) {
+
+            let updatedData = {time: times[0], courseId: course.id, teacherId: teacher.id};
+
+            axios.put(`/routines/${id}/classes/${selectedClass}`, updatedData)
                 .then(res => {
                     console.log('res', res);
                     let {status} = res.data;
@@ -204,18 +291,8 @@ export default function RoutineViewer() {
 
                 }).catch(er => console.log(er));
         } else {
-            axios.post(`/routines/${id}/classes`, d)
-                .then(res => {
-                    let {status} = res.data;
-                    if (status === 'success') {
-                        toast.success('class added');
-                        reset({});
-                        fetchData();
-                        setShowModal(false);
-                    }
 
-                }).catch(er => console.log(er));
-        }
+        }*/
     }
 
     const days = [{
@@ -236,9 +313,6 @@ export default function RoutineViewer() {
     }, {
         label: 'THU',
         value: 'thu',
-    }, {
-        label: 'FRI',
-        value: 'fri'
     }];
 
 
@@ -249,37 +323,83 @@ export default function RoutineViewer() {
         }
     }
 
-    const selectAndOpen = (classes, time) => {
-        let {courseCode} = time;
+    const selectAndOpen = (cls) => {
 
-        let cls = classes[courseCode];
+        console.log('cls', cls);
 
-        let times = cls.map((cls) => {
-            let tt = {};
-            tt.startTime = moment(cls.startTime, 'HH:mm:ss').format('hh:mm A');
-            tt.day = cls.day;
-            tt.periods = cls.periods;
-            tt.id = cls.classTimeId;
-            return tt;
-        });
+        if (user.userType === 'teacher' && user.id === cls.teacherId) {
+            setMode('write');
+        }
 
         reset({
-            times,
+            times: [{
+                startTime: moment(cls.startTime, 'HH:mm:ss').format('hh:mmA'),
+                day: cls.day,
+                periods: cls.periods,
+                id: cls.classTimeId
+            }],
             teacher: {
-                id: cls[0].teacherId, firstName: cls[0].teacherFirstName,
-                lastName: cls[0].teacherLastName,
+                id: cls.teacherId, firstName: cls.teacherFirstName,
+                lastName: cls.teacherLastName,
             },
-            course: {id: cls[0].courseId, name: cls[0].courseName, courseCode: cls[0].courseCode}
+            course: {id: cls.courseId, name: cls.courseName, courseCode: cls.courseCode}
         });
-        setSelectedClass(cls[0].id);
+        setSelectedClass(cls);
         setShowModal(true);
     }
 
-    //Todo fetch routine data along teacherId and courseId for update
+    const openAddClassModal = (day, sem, clsIndex) => {
+
+        let startTime = times[clsIndex];
+
+        reset({
+            times: [{day: day.value, id: '', startTime, periods: 1}],
+            teacher: user.userType === 'teacher' ? {
+                id: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+            } : null,
+            course: null,
+        });
+        setSelectedClass(null);
+        setShowModal(true);
+    }
 
     if (loading) {
         return <p>loading</p>
     }
+
+    function onSelectCourse(value, onChange) {
+        onChange(value);
+        console.log('value', value);
+        axios.get(`/routines/${id}/${value.id}`)
+            .then(res => {
+
+                let {teacherId, firstName, lastName} = res.data;
+
+                reset({...getValues(), teacher: {id: teacherId, firstName, lastName}});
+
+            }).catch(er => console.log(er));
+        //find the course teacher of this class if possible
+    }
+
+    function enableOverride() {
+
+        setMode('override');
+
+        reset({
+            ...getValues(), teacher: {
+                id: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName
+            },
+            course: null,
+        });
+
+        //todo find a way to reset specific field
+    }
+
+    console.log('errors', errors)
 
     return (
         <div>
@@ -288,63 +408,72 @@ export default function RoutineViewer() {
                     Routine
                 </Typography>
                 <div>
-                    <Button onClick={() => setShowModal(true)}>Add Class</Button>
+                    <Button onClick={openAddClassModal}>Add Class</Button>
                 </div>
             </div>
 
-            {
-                groupBySemesterWithClass.map((semester, index) => (
+            <Table>
+                <TableHead>
+                    <TableRow>
+                        <TableCell>Days</TableCell>
+                        <TableCell>Sem</TableCell>
+                        {times.map((item, index) => (
+                            <TableCell key={'times' + index}>
+                                {item}
+                            </TableCell>
+                        ))}
+                    </TableRow>
+                </TableHead>
+                <TableBody>
 
-                    <Accordion key={'acc' + index}>
-                        <AccordionSummary
-                            expandIcon={<Expand/>}
-                            aria-controls="panel1a-content"
-                            id="panel1a-header"
-                        >
-                            <Typography>{semester.semesterName}</Typography>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                            <TableContainer component={Paper}>
-                                <Table>
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell>Days</TableCell>
-                                            {times.map((item, index) => (
-                                                <TableCell key={'times' + index}>
-                                                    {item}
-                                                </TableCell>
-                                            ))}
-                                        </TableRow>
-                                    </TableHead>
+                    {routineDays.map((day, dayIndex) => (
 
-                                    <TableBody>
-                                        {semester.classes.map((day, index) => (
-                                            <TableRow key={index}>
-                                                <TableCell key={'day' + index}>{days[index].label}</TableCell>
-                                                {day.map((time, tIndex) => (
+                        routine.semesters.map((sem, index) => (
+                            <TableRow>
+                                {index === 0 &&
+                                    <TableCell rowSpan={4}>{day.label}</TableCell>
+                                }
+                                <TableCell>
+                                    {sem.shortName}
+                                </TableCell>
+                                {classes[dayIndex][index].map((cls, clsIndex) => {
 
-                                                    !time.isSpanned &&
+                                    return cls === 0 ? <TableCell>
 
-                                                    <TableCell key={tIndex} align={'center'}
-                                                               colSpan={time.periods}
-                                                               onClick={() => selectAndOpen(semester.groupByClass, time)}
-                                                               sx={{
-                                                                   bgcolor: time.color,
-                                                                   cursor: 'pointer'
-                                                               }}>{time.courseName}</TableCell>
-                                                ))}
-                                            </TableRow>
-                                        ))
-                                        }
-                                    </TableBody>
+                                            {times[clsIndex] == moment(routine.breakTime.split('-')[0], 'HH:mm').format('hh:mmA') ?
+                                                <Typography>
+                                                    Break
+                                                </Typography>
+                                                :
+                                                <IconButton onClick={() => openAddClassModal(day, sem, clsIndex)}>
+                                                    <Add/>
+                                                </IconButton>
+                                            }
 
-                                </Table>
-                            </TableContainer>
-                        </AccordionDetails>
-                    </Accordion>
-                ))
-            }
+                                        </TableCell>
+                                        :
 
+                                        !cls.spanned &&
+                                        <TableCell
+                                            colSpan={cls.isSpanable && cls.periods}
+                                            onClick={() => selectAndOpen(cls)} sx={{
+                                            cursor: 'pointer',
+                                            textAlign: 'center'
+                                        }}>
+                                            {cls.courseCode}
+                                        </TableCell>
+
+
+                                })}
+                            </TableRow>
+                        ))
+
+                    ))
+                    }
+
+
+                </TableBody>
+            </Table>
 
             <LocalizationProvider dateAdapter={AdapterMoment}>
 
@@ -369,7 +498,7 @@ export default function RoutineViewer() {
                                             {...register('course')}
                                             value={value}
                                             url={'/courses?q='}
-                                            onSelect={(value) => onChange(value)}
+                                            onSelect={(value) => onSelectCourse(value, onChange)}
                                             inputLabel={'Select Course'}
                                             setOptionLabel={(option) => `${option.name}(${option.courseCode})`}
 
@@ -394,7 +523,7 @@ export default function RoutineViewer() {
                                                     onSelect={(value) => onChange(value)}
                                                     inputLabel={'Select Teacher'}
                                                     setOptionLabel={(option) => option.firstName + " " + option.lastName}
-
+                                                    disabled={user.userType === 'teacher'}
                                                 />
 
                                                 <FormHelperText error={!!errors?.teacher}>
@@ -405,24 +534,28 @@ export default function RoutineViewer() {
 
                             />
 
+                            {
+                                !selectedClass &&
 
-                            <Box sx={{
-                                my: 2,
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center'
-                            }}>
-                                <Typography>Class Times</Typography>
-                                <IconButton
-                                    onClick={() => append({
-                                        id: null,
-                                        day: '',
-                                        startTime: null,
-                                        periods: ''
-                                    })}>
-                                    <Add/>
-                                </IconButton>
-                            </Box>
+
+                                <Box sx={{
+                                    my: 2,
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center'
+                                }}>
+                                    <Typography>Class Times</Typography>
+                                    <IconButton
+                                        onClick={() => append({
+                                            day: '',
+                                            startTime: null,
+                                            periods: ''
+                                        })}>
+                                        <Add/>
+                                    </IconButton>
+                                </Box>
+
+                            }
 
 
                             {
@@ -437,8 +570,6 @@ export default function RoutineViewer() {
 
                                             <Grid xs={6} lg={6} item>
 
-                                                <input type={'hidden'} {...register(`times[${index}].id`)}/>
-
                                                 <Controller
                                                     render={({field}) =>
                                                         <FormControl fullWidth={true} margin={"dense"}>
@@ -448,7 +579,7 @@ export default function RoutineViewer() {
                                                                 fullWidth={true}
                                                                 {...field}
                                                             >
-                                                                {days.map((option) => (
+                                                                {routineDays.map((option) => (
                                                                     <MenuItem key={option.value}
                                                                               value={option.value}>{option.label}</MenuItem>
                                                                 ))}
@@ -479,6 +610,9 @@ export default function RoutineViewer() {
                                                                                       value={time}>{time}</MenuItem>
                                                                         )))}
                                                                     </Select>
+                                                                    <FormHelperText error={true}>
+                                                                        {isTimeError('startTime', index, 'Day is a required field')}
+                                                                    </FormHelperText>
                                                                 </FormControl>
 
                                                             )}
@@ -520,9 +654,20 @@ export default function RoutineViewer() {
                                     </div>
                                 ))
                             }
+
+                            {
+                                (user.userType === 'teacher' && selectedClass) &&
+
+
+                                <Box>
+                                    <h3>You can override this class</h3>
+                                    <Button onClick={enableOverride}>click to override</Button>
+                                </Box>
+
+                            }
+
                             <Stack direction={'row'} spacing={5} justifyContent={'center'}>
                                 <Button variant={'contained'} type={'submit'}>Submit</Button>
-                                <Button variant={'contained'} type={'submit'}>Delete!</Button>
                             </Stack>
 
 

@@ -8,9 +8,9 @@ export const hasAccess = (user, item) => {
 
     const {permission, role, userType} = accessControl;
 
-    console.table({'userRoles': user.roles, 'reqRoles': role});
+   // console.table({'userRoles': user.roles, 'reqRoles': role});
 
-    console.log('user', user);
+   // console.log('user', user);
 
     if (role && user.role === role) {
         return true;
