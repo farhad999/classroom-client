@@ -1,4 +1,4 @@
-import {Window, Person} from "@mui/icons-material";
+import {Window, Person, School} from "@mui/icons-material";
 
 //ac => access control if
 
@@ -12,7 +12,7 @@ export const menuItems = [
         icon: <Window/>
     }, {
         id: 'users',
-        title: "Users",
+        title: "User Management",
         icon: <Person/>,
         ac: {role: role, permission: 'users.view'},
         children: [
@@ -30,22 +30,35 @@ export const menuItems = [
                 url: '/users/stuff'
             }
         ]
-    }, {
-        id: 'courses',
-        title: 'Courses',
-        url: '/courses',
+    },
+
+    {
+        id: 'academics',
+        title: 'Academics',
+        icon: <School/>,
         ac: {role: role, permission: 'course.view'},
-    }, {
-        id: 'routine',
-        title: 'Routine',
-        url: '/routines',
-        ac: {role: role, permission: 'routine.view'}
-    }, {
-        id: 'classes',
-        title: 'Classes',
-        url: '/classes',
-        ac: {userType: ['teacher', 'student']},
-    }, {
+        children: [
+            {
+                id: 'academics-courses',
+                title: 'Courses',
+                url: '/courses',
+                ac: {role: role, permission: 'course.view'},
+            }, {
+                id: 'academics-routine',
+                title: 'Routine',
+                url: '/routines',
+                ac: {role: role, permission: 'routine.view'}
+            },
+            {
+                id: 'academics-classes',
+                title: 'Classes',
+                url: '/classes',
+                ac: {role: role, userType: ['teacher', 'student']},
+            },
+        ]
+    },
+
+    {
         id: 'groups',
         title: 'Groups',
         url: '/g',
