@@ -37,6 +37,8 @@ import QuestionAndAnswers from "./pages/group/QuestionAndAnswers";
 import QuestionViewer from "./pages/QuestionViewer";
 import 'react-quill/dist/quill.snow.css';
 import AskQuestion from "./pages/AskQuestion";
+import ChatList from "./pages/ChatList";
+import Conversation from "./pages/Conversation";
 
 function App() {
 
@@ -96,6 +98,12 @@ function App() {
                             </Route>
                             <Route path={'/c/:id'} element={<Posts/>}/>
                         </Route>
+
+                        {/* Messaging */}
+
+                        <Route path={'/m/:id'} element={<Conversation />} />
+
+                        <Route path={'/m'} element={<ChatList /> } />
 
                         {/* Group */}
 
