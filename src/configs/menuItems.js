@@ -1,4 +1,4 @@
-import {Window, Person, School} from "@mui/icons-material";
+import {Window, Person, School, Groups, Chat} from "@mui/icons-material";
 
 //ac => access control if
 
@@ -28,6 +28,10 @@ export const menuItems = [
                 id: 'users-stuff',
                 title: 'Stuffs',
                 url: '/users/stuff'
+            }, {
+                id: 'users-designation',
+                title: 'Designation',
+                url: "/designations"
             }
         ]
     },
@@ -62,9 +66,11 @@ export const menuItems = [
         id: 'groups',
         title: 'Groups',
         url: '/g',
+        icon: <Groups/>
     }, {
         id: 'chats',
-        title: 'Chats',
+        title: 'Messaging',
         url: '/m',
+        icon: <Chat/>,
     }
 ]
