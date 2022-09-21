@@ -60,13 +60,13 @@ function Login() {
 
         dispatch(login(data))
             .then(res => {
-                let {status, token} = res.payload;
+                let {status, token, error} = res.payload;
 
                 if (status === 'success') {
                     axios.defaults.headers['authorization'] = 'Bearer ' + token;
                     dispatch(fetchUser());
                 } else {
-                    toast.error("Email or Password is incorrect");
+                    toast.error(error);
                 }
             });
 
