@@ -71,5 +71,14 @@ export default function componentStyleOverrides(theme) {
                 }
             }
         },
+        MuiDataGrid: {
+            styleOverrides: {
+                root: {
+                    '& .MuiDataGrid-cell:focus': {
+                        outline: 'none',
+                    }
+                }
+            }
+        }
     }
 }
