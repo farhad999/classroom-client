@@ -1,7 +1,7 @@
 import React from 'react'
 import axios from "axios";
-import {useParams} from "react-router-dom";
-import {useForm} from "react-hook-form";
+import {useParams, useNavigate} from "react-router-dom";
+import {useForm, Controller} from "react-hook-form";
 import {
     Box,
     Button,
@@ -11,16 +11,20 @@ import {
     FormHelperText,
     InputLabel, MenuItem,
     OutlinedInput,
-    Paper, Select, Stack, Typography,
+    Paper, Select, Stack, TextField, Typography,
     useMediaQuery
 } from '@mui/material'
 import {CustomDialogTitle} from '../components/MuiCustom/CustomDialogTitle'
-import {Edit, Delete} from '@mui/icons-material'
+import {Edit, Delete, PanoramaFishEye, Visibility} from '@mui/icons-material'
 import {yupResolver} from "@hookform/resolvers/yup";
 import * as yup from 'yup'
-import {useTheme} from "@mui/material/styles";
 import AlertDialog from "../components/MuiCustom/AlertDialog";
 import {DataGrid, GridActionsCellItem} from "@mui/x-data-grid";
+import {AdapterMoment} from "@mui/x-date-pickers/AdapterMoment";
+import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
+import {DatePicker, MobileDatePicker} from "@mui/x-date-pickers";
+import moment from "moment";
+import {toast} from "react-toastify";
 
 //TODO Current semester selectable for student add
 
@@ -39,6 +43,8 @@ function Users(props) {
     //modal
 
     let [showModal, setShowModal] = React.useState(false);
+
+    const navigate = useNavigate();
 
     //form
 
@@ -60,9 +66,17 @@ function Users(props) {
             is: 'student',
             then: yup.string().required(),
         }),
+        designationId: yup.string().when('userType', {
+            is: 'student',
+            otherwise: yup.string().required(),
+        }),
+        joiningDate: yup.string().when('userType', {
+            is: 'student',
+            otherwise: yup.string().required(),
+        }),
     });
 
-    let {register, handleSubmit, formState: {errors}, reset} = useForm({resolver: yupResolver(userSchema)});
+    let {register, handleSubmit, control, formState: {errors}, reset} = useForm({resolver: yupResolver(userSchema)});
 
     //selected
 
@@ -78,6 +92,8 @@ function Users(props) {
 
     let [showAlertDialog, setShowAlertDialog] = React.useState(false);
 
+    let [designations, setDesignations] = React.useState([]);
+
     //
 
     const [modalTitle, setModalTitle] = React.useState('');
@@ -90,6 +106,9 @@ function Users(props) {
                 let res = await axios.get('/semesters');
                 let {semesters} = res.data;
                 setSemesters(semesters);
+            } else {
+                let res = await axios.get('/designations');
+                setDesignations(res.data);
             }
             await fetchData('params', 1);
             setLoading(false);
@@ -127,54 +146,46 @@ function Users(props) {
 
     const addOrUpdate = (data) => {
 
-        if (selectedId) {
-            //update
+        console.log('data', data);
 
-            let {userType, ...rest} = data;
-
-            axios.put('/users/' + selectedId, rest).then(res => {
-                let {status} = res.data;
-
-                if (status === 'success') {
-
-                    let mapped = users.map(item => {
-                        if (item.id === selectedId) {
-                            return {...item, ...data};
-                        }
-                        return item;
-                    });
-
-                    setUsers(mapped)
-
-                    setShowModal(false);
-                }
-
-            }).catch(er => console.log('er', er));
-
-
-        } else {
-            axios.post('/users', data).then(res => {
-                let {status} = res.data;
-
-                if (status === 'success') {
-                    fetchData('', 1);
-                    setCurrentPage(1);
-                    setShowModal(false);
-                }
-
-            }).catch(er => console.log('er', er));
+        if (data.hasOwnProperty('joiningDate')) {
+            data.joiningDate = moment(data.joiningDate).format('YYYY-MM-DD');
         }
 
+        axios.post('/users', data).then(res => {
+            let {status, message} = res.data;
+
+            if (status === 'success') {
+                fetchData('', 1);
+                setCurrentPage(1);
+                setShowModal(false);
+                toast.success(message)
+            } else {
+                toast.error(message)
+            }
+
+        }).catch(er => console.log('er', er));
 
     }
     //for update
     const selectAndOpenModal = (item) => {
 
-        let {id, semesterName, semesterId, ...itemWithoutId} = item;
 
-        setSelectedSemester(semesterId);
+        let {id, email, firstName, lastName} = item;
 
-        reset(itemWithoutId);
+        let resetData = {id, email, firstName, lastName};
+
+        if (type === 'student') {
+            let {semesterId, session, studentId} = item;
+            resetData = {...resetData, semesterId, session, studentId}
+        } else {
+            let {designationId, joiningDate} = item;
+            resetData = {...resetData, designationId, joiningDate};
+        }
+
+        //setSelectedSemester(semesterId);
+
+        reset(resetData);
 
         setSelectedId(id);
 
@@ -184,7 +195,9 @@ function Users(props) {
     }
     //for add
     const resetAndOpenModal = () => {
-        reset({});
+        if (type !== 'student') {
+            reset({joiningDate: null});
+        }
         setSelectedId(null);
         setSelectedSemester('');
         setModalTitle(`Add ${type}`);
@@ -220,21 +233,32 @@ function Users(props) {
 
     let columns = [{
         field: 'firstName',
-        headerName: 'FirstName'
+        headerName: 'FirstName',
+        flex: 1,
+        minWidth: '100px'
     }, {
         field: 'lastName',
         headerName: 'LastName',
+        flex: 1,
     },
         {
             field: 'email',
-            headerName: 'Email'
+            headerName: 'Email',
+            flex: 1,
         }, {
 
             field: 'actions',
             type: 'actions',
             headerName: 'Actions',
-            width: 80,
+            flex: 1,
             getActions: (params) => [
+
+                <GridActionsCellItem label={'View'}
+                                     icon={<Visibility/>}
+                                     onClick={()=>navigate('/user/'+params.row.id)}
+
+                />,
+
 
                 <GridActionsCellItem label={"Edit"}
                                      icon={<Edit/>}
@@ -245,7 +269,8 @@ function Users(props) {
                     icon={<Delete/>}
                     label="Delete"
                     onClick={() => selectAndOpenAlert(params.row)}
-                />,
+                />
+
             ]
         }];
 
@@ -256,10 +281,10 @@ function Users(props) {
     }
 
     return (
-        <div>
+        <LocalizationProvider dateAdapter={AdapterMoment}>
 
             <Stack sx={{mb: 2}} direction={"row"} justifyContent={"space-between"}
-            alignItems={'center'}
+                   alignItems={'center'}
             >
                 <Typography textTransform={'capitalize'} variant={'h3'} component={'div'}>
                     {type}s
@@ -272,7 +297,7 @@ function Users(props) {
             {
                 !loading &&
                 <>
-                    <Paper sx={{height: '500px', width: '100%'}}>
+                    <Paper sx={{height: '600px', width: '100%'}}>
 
                         <DataGrid columns={columns}
                                   rows={users}
@@ -281,6 +306,10 @@ function Users(props) {
                                   page={currentPage - 1}
                                   onPageChange={onPageUpdate}
                                   paginationMode={'server'}
+                                  disableSelectionOnClick={true}
+                                  disableColumnFilter={true}
+                                  disableColumnSelector={true}
+                                  disableColumnMenu={true}
                         />
 
                     </Paper>
@@ -371,61 +400,110 @@ function Users(props) {
 
 
                         {
-                            type === 'student' &&
+                            type === 'student' ?
 
-                            <Box>
+                                <Box>
 
-                                <FormControl fullWidth
-                                             margin={'normal'}>
-                                    <InputLabel>
-                                        Select Semester
-                                    </InputLabel>
-                                    <Select
-                                        {...register('semesterId')}
-                                        label={'Select Semester'}
-                                        value={selectedSemester}
-                                        onChange={(event) => setSelectedSemester(event.target.value)}
+                                    <FormControl fullWidth
+                                                 margin={'normal'}>
+                                        <InputLabel>
+                                            Select Semester
+                                        </InputLabel>
+                                        <Controller render={({field}) => (
+                                            <Select
+                                                label={'Select Semester'}
+                                                {...field}
 
-                                    >
-                                        {semesters.map((item) => (
-                                            <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>
-                                        ))}
-                                    </Select>
-                                    <FormHelperText error={!!errors?.semesterId}>
-                                        {errors.semesterId?.message}
-                                    </FormHelperText>
-                                </FormControl>
+                                            >
+                                                {semesters.map((item) => (
+                                                    <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>
+                                                ))}
+                                            </Select>
+                                        )} name={'semesterId'} control={control}/>
+
+                                        <FormHelperText error={!!errors?.semesterId}>
+                                            {errors.semesterId?.message}
+                                        </FormHelperText>
+                                    </FormControl>
 
 
-                                <FormControl fullWidth margin={'normal'}>
-                                    <InputLabel>Student Id</InputLabel>
-                                    <OutlinedInput
-                                        {...register('studentId')}
-                                        type="text"
-                                        name="studentId"
-                                        label="Student ID"
+                                    <FormControl fullWidth margin={'normal'}>
+                                        <InputLabel>Student Id</InputLabel>
+                                        <OutlinedInput
+                                            {...register('studentId')}
+                                            type="text"
+                                            name="studentId"
+                                            label="Student ID"
 
-                                    />
-                                    <FormHelperText error={!!errors?.studentId}>
-                                        {errors.studentId?.message}
-                                    </FormHelperText>
-                                </FormControl>
+                                        />
+                                        <FormHelperText error={!!errors?.studentId}>
+                                            {errors.studentId?.message}
+                                        </FormHelperText>
+                                    </FormControl>
 
-                                <FormControl fullWidth margin={'normal'}>
-                                    <InputLabel>Session</InputLabel>
-                                    <OutlinedInput
-                                        {...register('session')}
-                                        type="text"
-                                        name="session"
-                                        label="Session"
+                                    <FormControl fullWidth margin={'normal'}>
+                                        <InputLabel>Session</InputLabel>
+                                        <OutlinedInput
+                                            {...register('session')}
+                                            type="text"
+                                            name="session"
+                                            label="Session"
 
-                                    />
-                                    <FormHelperText error={!!errors?.session}>
-                                        {errors.session?.message}
-                                    </FormHelperText>
-                                </FormControl>
+                                        />
+                                        <FormHelperText error={!!errors?.session}>
+                                            {errors.session?.message}
+                                        </FormHelperText>
+                                    </FormControl>
 
-                            </Box>
+                                </Box>
+
+                                : <Box>
+
+                                    <FormControl fullWidth
+                                                 margin={'normal'}>
+                                        <InputLabel>
+                                            Select Designation
+                                        </InputLabel>
+
+                                        <Controller render={({field: {value, onChange}}) => (
+                                            <Select
+                                                label={'Select Designation'}
+                                                value={value}
+                                                onChange={(event) => onChange(event.target.value)}
+
+                                            >
+                                                {designations.map((item) => (
+                                                    <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>
+                                                ))}
+                                            </Select>
+                                        )} name={'designationId'}
+                                                    control={control}/>
+
+
+                                        <FormHelperText error={!!errors?.designationId}>
+                                            {errors.designationId?.message}
+                                        </FormHelperText>
+                                    </FormControl>
+
+
+                                    <FormControl fullWidth margin={'normal'}>
+                                        <Controller render={({field: {value, onChange}}) => (
+                                            <MobileDatePicker
+                                                label="Joining Date"
+                                                inputFormat="DD/MM/YYYY"
+                                                value={value}
+                                                disableFuture={true}
+                                                onChange={(value) => onChange(value)}
+                                                renderInput={(params) => <TextField {...params} />}
+                                            />
+                                        )} name={'joiningDate'} control={control}/>
+
+                                        <FormHelperText error={!!errors?.joiningDate}>
+                                            {errors.joiningDate?.message}
+                                        </FormHelperText>
+                                    </FormControl>
+
+                                </Box>
 
                         }
 
@@ -461,7 +539,7 @@ function Users(props) {
             >
             </AlertDialog>
 
-        </div>
+        </LocalizationProvider>
     )
 
 }

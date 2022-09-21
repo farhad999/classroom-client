@@ -87,12 +87,12 @@ function App() {
                         <Route path={'/routines/:id'} element={<RoutineViewer/>}/>
                         <Route path={'/routines'} element={<Routines/>}/>
                         <Route path={'/classes'} element={<Classes/>}/>
-                        <Route path={'/designations'} element={<Designations />} />
+                        <Route path={'/designations'} element={<Designations/>}/>
 
                         <Route path={'/c/:id'} element={<Classroom/>}>
                             <Route path={'/c/:id/att'} element={<Attendances/>}/>
                             <Route path={'/c/:id/w'} element={<ClassWork/>}/>
-                            <Route path={'/c/:id/participants'} element={<Participants />} />
+                            <Route path={'/c/:id/participants'} element={<Participants/>}/>
                             <Route path={'/c/:id/w/:w'} element={<ClassWorkItem/>}>
                                 <Route path={'/c/:id/w/:w'} element={<ClassWorkDetails/>}/>
                                 <Route path={'/c/:id/w/:w/submissions'} element={<Submissions/>}/>
@@ -102,19 +102,19 @@ function App() {
 
                         {/* Messaging */}
 
-                        <Route path={'/m/:id'} element={<Conversation />} />
+                        <Route path={'/m/:id'} element={<Conversation/>}/>
 
-                        <Route path={'/m'} element={<ChatList /> } />
+                        <Route path={'/m'} element={<ChatList/>}/>
 
                         {/* Group */}
 
                         <Route path={'/g/:id'} element={<Group/>}>
                             <Route path={'/g/:id/members'} element={<MemberList/>}/>
                             <Route path={'/g/:id/requests'} element={<Requests/>}/>
-                            <Route path={'/g/:id/about'} element={<About /> } />
-                            <Route path={'/g/:id/q/:qId'} element={<QuestionViewer />} />
-                            <Route path={'/g/:id/q/ask'} element={<AskQuestion /> } />
-                            <Route path={'/g/:id/q'} element={<QuestionAndAnswers /> } />
+                            <Route path={'/g/:id/about'} element={<About/>}/>
+                            <Route path={'/g/:id/q/:qId'} element={<QuestionViewer/>}/>
+                            <Route path={'/g/:id/q/ask'} element={<AskQuestion/>}/>
+                            <Route path={'/g/:id/q'} element={<QuestionAndAnswers/>}/>
                             <Route path={'/g/:id'} element={<GroupPosts/>}/>
                         </Route>
 
