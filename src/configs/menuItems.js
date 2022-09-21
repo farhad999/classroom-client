@@ -58,7 +58,12 @@ export const menuItems = [
                 title: 'Classes',
                 url: '/classes',
                 ac: {role: role, userType: ['teacher', 'student']},
-            },
+            },{
+            id: 'academics-semeseter',
+                title: 'Semesters',
+                url: '/semesters',
+                ac: {role}
+            }
         ]
     },
 

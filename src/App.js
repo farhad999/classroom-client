@@ -40,6 +40,7 @@ import AskQuestion from "./pages/AskQuestion";
 import ChatList from "./pages/ChatList";
 import Conversation from "./pages/Conversation";
 import Designations from "./pages/Designations";
+import Semesters from "./pages/Semesters";
 
 function App() {
 
@@ -88,7 +89,7 @@ function App() {
                         <Route path={'/routines'} element={<Routines/>}/>
                         <Route path={'/classes'} element={<Classes/>}/>
                         <Route path={'/designations'} element={<Designations/>}/>
-
+                        <Route path={'/semesters'} element={<Semesters />} />
                         <Route path={'/c/:id'} element={<Classroom/>}>
                             <Route path={'/c/:id/att'} element={<Attendances/>}/>
                             <Route path={'/c/:id/w'} element={<ClassWork/>}/>
