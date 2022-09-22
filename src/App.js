@@ -41,6 +41,7 @@ import ChatList from "./pages/ChatList";
 import Conversation from "./pages/Conversation";
 import Designations from "./pages/Designations";
 import Semesters from "./pages/Semesters";
+import Sessions from "./pages/Sessions";
 
 function App() {
 
@@ -90,6 +91,7 @@ function App() {
                         <Route path={'/classes'} element={<Classes/>}/>
                         <Route path={'/designations'} element={<Designations/>}/>
                         <Route path={'/semesters'} element={<Semesters />} />
+                        <Route path={'/sessions'} element={<Sessions/>} />
                         <Route path={'/c/:id'} element={<Classroom/>}>
                             <Route path={'/c/:id/att'} element={<Attendances/>}/>
                             <Route path={'/c/:id/w'} element={<ClassWork/>}/>
