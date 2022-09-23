@@ -72,9 +72,7 @@ function Courses() {
 
                 let response = await axios.get('/semesters');
 
-                let {semesters} = response.data;
-
-                setSemesters(semesters);
+                setSemesters(response.data);
             }
 
             setLoading(false);

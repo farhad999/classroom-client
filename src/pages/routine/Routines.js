@@ -107,8 +107,7 @@ export default function Routines() {
 
         axios.get('semesters')
             .then(res => {
-                const {semesters} = res.data;
-                setSemesters(semesters);
+                setSemesters(res.data);
             }).catch(er => console.log(er));
 
     }, []);
