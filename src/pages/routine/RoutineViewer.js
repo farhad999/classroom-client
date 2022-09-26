@@ -10,7 +10,7 @@ import {
     DialogContent,
     Divider,
     FormControl, FormHelperText, Grid, IconButton,
-    InputLabel,
+    InputLabel, Menu,
     MenuItem, OutlinedInput, Paper,
     Select, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, TextField,
     Typography
@@ -51,6 +51,14 @@ export default function RoutineViewer() {
     const [routineDays, setRoutineDays] = React.useState([]);
 
     const [classes, setClasses] = React.useState([]);
+
+    //selectedSemester
+
+    const [selectedSemester, setSelectedSemester] = React.useState("");
+
+    //menu
+
+    const [menuAnchor, setMenuAnchor] = React.useState();
 
     //router
 
@@ -119,11 +127,11 @@ export default function RoutineViewer() {
 
         //async get data
 
-        let res = await axios.get(`/routines/${id}`);
+        let res = await axios.get(`/routines/${id}/classes?semesterId=${selectedSemester}`);
 
-        let {routine, classes} = res.data;
+        let classes = res.data;
 
-        setRoutine(routine);
+        // setClasses(classes);
 
         let min = moment(routine.startTime, 'HH:mm:ss');
         let max = moment(routine.endTime, 'HH:mm:ss');
@@ -154,7 +162,7 @@ export default function RoutineViewer() {
 
         //main array
 
-        const arr = new Array(routineDays.length).fill(0).map(() => new Array(availableSemesters.length).fill(0).map(() => new Array(times.length).fill(0)));
+        const arr = new Array(times.length).fill(0).map(() => new Array(routineDays.length).fill(0));
 
         //classes are grouped into days
 
@@ -168,8 +176,6 @@ export default function RoutineViewer() {
 
             //classes for a day into semester groups
 
-            let groupBySemester = _.groupBy(allCoursesForThisDay, 'shortName');
-
             // object.semesterName = semester;
             //  object.groupByClass = groupByClass;
             // classGroupBySemesters.push(object);
@@ -178,43 +184,30 @@ export default function RoutineViewer() {
 
             let count = 0;
 
-            for (let semesterShortName of Object.keys(groupBySemester)) {
 
-                let color = getRandomColor();
+            for (let classTime of allCoursesForThisDay) {
 
-                let classesForEachSemester = groupBySemester[semesterShortName];
+                console.log('classTime', classTime);
 
+                let dayIndex = routineDays.findIndex(item => item.value === classTime.day);
+                let timeIndex = times.findIndex((item) => moment(item, 'HH:mm A').isSame(moment(classTime.startTime, 'HH:mm:ss')));
+                // classTime.color = color; // colors[count];
+                //currently do not show that
 
-                for (let classTime of classesForEachSemester) {
+                arr[timeIndex][dayIndex] = classTime;
 
-                    console.log('classTime', classTime);
-
-                    let semesterIndex = availableSemesters.findIndex(item => item === classTime.shortName);
-
-                    console.log('semester index', semesterIndex);
-
-                    let dayIndex = routineDays.findIndex(item => item.value === classTime.day);
-                    let timeIndex = times.findIndex((item) => moment(item, 'HH:mm A').isSame(moment(classTime.startTime, 'HH:mm:ss')));
-                    // classTime.color = color; // colors[count];
-                    //currently do not show that
-                    if (semesterIndex >= 0) {
-                        arr[dayIndex][semesterIndex][timeIndex] = classTime;
-                    }
-
-                    if (classTime.periods > 1) {
-                        for (let i = 0; i < classTime.periods; i++) {
-                            if (i === 0) {
-                                arr[dayIndex][semesterIndex][timeIndex] = {isSpanable: true, ...classTime};
-                            } else {
-                                arr[dayIndex][semesterIndex][timeIndex + i] = {spanned: true};
-                            }
-
+                if (classTime.periods > 1) {
+                    for (let i = 0; i < classTime.periods; i++) {
+                        if (i === 0) {
+                            arr[dayIndex][timeIndex] = {isSpanable: true, ...classTime};
+                        } else {
+                            arr[dayIndex][timeIndex + i] = {spanned: true};
                         }
+
                     }
                 }
-                count++;
             }
-
+            count++;
         }
         setLoading(false);
 
@@ -224,9 +217,23 @@ export default function RoutineViewer() {
     }
 
     React.useEffect(() => {
-        fetchData();
+        //fetchData();
+        axios.get(`/routines/${id}`).then(res => {
+            let routine = res.data;
+            let semester = routine.semesters[0];
+            setRoutine(routine);
+            setSelectedSemester(semester.id)
+        }).catch(er => console.log(er));
+
+
     }, []);
 
+    React.useEffect(() => {
+        if (selectedSemester) {
+            fetchData();
+        }
+
+    }, [selectedSemester]);
 
     const getRandomColor = () => `hsla(${Math.random() * 360}, 100%, 70%, 1)`;
 
@@ -348,9 +355,11 @@ export default function RoutineViewer() {
         setShowModal(true);
     }
 
-    const openAddClassModal = (day, sem, clsIndex) => {
+    const openAddClassModal = (clsIndex) => {
 
         let startTime = times[clsIndex];
+
+        let day = days[clsIndex];
 
         reset({
             times: [{day: day.value, id: '', startTime, periods: 1}],
@@ -385,6 +394,8 @@ export default function RoutineViewer() {
 
     function enableOverride() {
 
+        //todo compare rank from database
+
         setMode('override');
 
         reset({
@@ -399,11 +410,16 @@ export default function RoutineViewer() {
         //todo find a way to reset specific field
     }
 
-    console.log('errors', errors)
+    const isDisabled = () => {
+        return mode === 'read' && user.userType === 'teacher';
+
+    }
+
+    //todo give permission to teacher to create class
 
     return (
         <div>
-            <div className={'flex justify-between items-center'}>
+            <div className={'flex justify-between items-center my-1'}>
                 <Typography variant={'h3'}>
                     Routine
                 </Typography>
@@ -412,40 +428,49 @@ export default function RoutineViewer() {
                 </div>
             </div>
 
-            <Table>
-                <TableHead>
-                    <TableRow>
-                        <TableCell>Days</TableCell>
-                        <TableCell>Sem</TableCell>
-                        {times.map((item, index) => (
-                            <TableCell key={'times' + index}>
-                                {item}
-                            </TableCell>
-                        ))}
-                    </TableRow>
-                </TableHead>
-                <TableBody>
+            <div className={'flex justify-end'}>
+                <Select
+                    label={"Semester"}
+                    value={selectedSemester}
+                    onChange={event => setSelectedSemester(event.target.value)}
+                    my={1}
+                >
+                    {routine.semesters.map((semester, index) => (
+                        <MenuItem key={index} value={semester.id}>{semester.name}</MenuItem>
+                    ))}
+                </Select>
+            </div>
 
-                    {routineDays.map((day, dayIndex) => (
-
-                        routine.semesters.map((sem, index) => (
-                            <TableRow>
-                                {index === 0 &&
-                                    <TableCell rowSpan={4}>{day.label}</TableCell>
-                                }
-                                <TableCell>
-                                    {sem.shortName}
+            <Box width={'100%'} overflowX={'scroll'}>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>Time</TableCell>
+                            {routineDays.map((day, index) => (
+                                <TableCell align={"center"} key={'times' + index}>
+                                    {day.label}
                                 </TableCell>
-                                {classes[dayIndex][index].map((cls, clsIndex) => {
+                            ))}
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
 
-                                    return cls === 0 ? <TableCell>
+                        {times.map((time, timeIndex) => (
 
-                                            {times[clsIndex] == moment(routine.breakTime.split('-')[0], 'HH:mm').format('hh:mmA') ?
+                            <TableRow>
+
+                                <TableCell>{time}</TableCell>
+
+                                {classes[timeIndex].map((cls, clsIndex) => {
+
+                                    return cls === 0 ? <TableCell align={"center"}>
+
+                                            {time == moment(routine.breakTime.split('-')[0], 'HH:mm').format('hh:mmA') ?
                                                 <Typography>
                                                     Break
                                                 </Typography>
                                                 :
-                                                <IconButton onClick={() => openAddClassModal(day, sem, clsIndex)}>
+                                                <IconButton onClick={() => openAddClassModal(clsIndex)}>
                                                     <Add/>
                                                 </IconButton>
                                             }
@@ -467,13 +492,12 @@ export default function RoutineViewer() {
                                 })}
                             </TableRow>
                         ))
-
-                    ))
-                    }
+                        }
 
 
-                </TableBody>
-            </Table>
+                    </TableBody>
+                </Table>
+            </Box>
 
             <LocalizationProvider dateAdapter={AdapterMoment}>
 
@@ -497,10 +521,11 @@ export default function RoutineViewer() {
                                         <CustomAutoComplete
                                             {...register('course')}
                                             value={value}
-                                            url={'/courses?q='}
+                                            url={`/courses?semesterId=${selectedSemester}&q=`}
                                             onSelect={(value) => onSelectCourse(value, onChange)}
                                             inputLabel={'Select Course'}
                                             setOptionLabel={(option) => `${option.name}(${option.courseCode})`}
+                                            disabled={isDisabled()}
 
                                         />
                                         <FormHelperText error={!!errors?.course}>
@@ -523,7 +548,7 @@ export default function RoutineViewer() {
                                                     onSelect={(value) => onChange(value)}
                                                     inputLabel={'Select Teacher'}
                                                     setOptionLabel={(option) => option.firstName + " " + option.lastName}
-                                                    disabled={user.userType === 'teacher'}
+                                                    disabled={isDisabled()}
                                                 />
 
                                                 <FormHelperText error={!!errors?.teacher}>
@@ -578,6 +603,7 @@ export default function RoutineViewer() {
                                                                 label={'Days'}
                                                                 fullWidth={true}
                                                                 {...field}
+                                                                disabled={isDisabled()}
                                                             >
                                                                 {routineDays.map((option) => (
                                                                     <MenuItem key={option.value}
@@ -604,7 +630,9 @@ export default function RoutineViewer() {
                                                                     <InputLabel>Time*</InputLabel>
                                                                     <Select
                                                                         label={'Time'}
-                                                                        {...field}>
+                                                                        {...field}
+                                                                        disabled={isDisabled()}
+                                                                    >
                                                                         {times.map((time => (
                                                                             <MenuItem key={'k' + time}
                                                                                       value={time}>{time}</MenuItem>
@@ -629,6 +657,7 @@ export default function RoutineViewer() {
                                                 <InputLabel>Periods*</InputLabel>
                                                 <Select
                                                     label={'Periods'}
+                                                    disabled={isDisabled()}
                                                     {...field}
                                                 >
                                                     <MenuItem value={1}>1</MenuItem>
@@ -657,17 +686,14 @@ export default function RoutineViewer() {
 
                             {
                                 (user.userType === 'teacher' && selectedClass) &&
-
-
                                 <Box>
-                                    <h3>You can override this class</h3>
-                                    <Button onClick={enableOverride}>click to override</Button>
+                                    <Button variant={'contained'} onClick={enableOverride}>Enable Override</Button>
                                 </Box>
 
                             }
 
                             <Stack direction={'row'} spacing={5} justifyContent={'center'}>
-                                <Button variant={'contained'} type={'submit'}>Submit</Button>
+                                <Button disabled={isDisabled()} variant={'contained'} type={'submit'}>Save</Button>
                             </Stack>
 
 
