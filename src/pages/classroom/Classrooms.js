@@ -38,14 +38,28 @@ export default function Classrooms() {
 
     return (
         <ErrorWrapper status={statusCode}>
-            <Typography variant={'h4'}>Active Classes</Typography>
-            {classes.activeClasses.map((cls) => (
-                <Card>
-                    <CardHeader>
-                        <Typography variant={'h4'}>{cls.courseName}</Typography>
-                    </CardHeader>
-                </Card>
-            ))}
+
+            <Box sx={{py: 2}}>
+
+                <Typography sx={{my: 2}} variant={'h4'}>Active Classes</Typography>
+
+                <Grid container spacing={2}>
+                    {classes.activeClasses.map((cls) => (
+
+                        <Grid key={cls.id} item xs={12} sm={6} md={4} >
+                            <Link to={'/c/' + cls.id}>
+                                <Card height={'100%'}>
+                                    <CardHeader sx={{bgcolor: 'primary.main', height: '100px'}} title={<Typography color={'whitesmoke'} variant={'h4'}>{cls.courseName}</Typography>}/>
+                                    <CardContent>
+                                        <Typography variant={'h5'}>Course code: {cls.courseCode}</Typography>
+                                    </CardContent>
+                                </Card>
+                            </Link>
+                        </Grid>
+
+                    ))}
+                </Grid>
+            </Box>
 
             <Box sx={{py: 2}}>
 

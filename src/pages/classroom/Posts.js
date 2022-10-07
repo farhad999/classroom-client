@@ -10,10 +10,13 @@ import {useDispatch, useSelector} from "react-redux";
 
 import {closeFile} from "../../store/slices/fileViewer";
 import CreatePost from "../../components/posts/CreatePost";
+import RenderIf from "../../components/wrappers/RenderIf";
 
 function Posts() {
 
     let [loading, setLoading] = React.useState(true);
+
+    const {user} = useSelector(state => state.classroom);
 
     //params
 
@@ -66,24 +69,24 @@ function Posts() {
     return (
         <>
 
-            <CreatePost url={`/c/${id}/posts`} onSuccess={getPosts}/>
+            <RenderIf condition={user.isMainTeacher}>
+                <CreatePost url={`/c/${id}/posts`} onSuccess={getPosts}/>
+            </RenderIf>
+
 
             {posts.map((post, index) => (
-                <div>
-                    <PostCard name={post.firstName + ' ' + post.lastName} time={post.createdAt} body={post.body}
-                              key={index}
-                              attachments={post.attachments}
-                    />
-                </div>
+                <PostCard name={post.firstName + ' ' + post.lastName} time={post.createdAt} body={post.body}
+                          key={index}
+                          attachments={post.attachments}
+                />
             ))}
 
-            {
-                postPagination.lastPage > currentPostPage &&
 
+            <RenderIf condition={postPagination.lastPage > currentPostPage}>
                 <Box>
                     <Button onClick={loadMore}>Load More</Button>
                 </Box>
-            }
+            </RenderIf>
 
             <FileViewer/>
 
