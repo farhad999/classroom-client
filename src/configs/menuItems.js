@@ -53,12 +53,12 @@ export const menuItems = [
                 url: '/routines',
                 ac: {role: role, permission: 'routine.view'}
             },
-            {
+           /* {
                 id: 'academics-classes',
                 title: 'Classes',
                 url: '/classes',
                 ac: {role: role, userType: ['teacher', 'student']},
-            }, {
+            }*/ {
                 id: 'academics-semeseter',
                 title: 'Semesters',
                 url: '/semesters',
@@ -70,6 +70,12 @@ export const menuItems = [
                 ac: {role},
             }
         ]
+    },
+
+    {
+      id: 'classrooms',
+      title: 'Classroom',
+      url: '/c',
     },
 
     {

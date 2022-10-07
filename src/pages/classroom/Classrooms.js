@@ -5,7 +5,7 @@ import {Link} from "react-router-dom";
 import {useNavigate} from 'react-router-dom'
 import ErrorWrapper from "../../components/ErrorWrapper";
 
-export default function Classes() {
+export default function Classrooms() {
 
     const [classes, setClasses] = React.useState({});
 

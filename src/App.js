@@ -17,7 +17,7 @@ import Users from "./pages/Users";
 import Courses from "./pages/Courses";
 import Routines from "./pages/routine/Routines";
 import RoutineViewer from "./pages/routine/RoutineViewer";
-import Classes from "./pages/classroom/Classes";
+import Classrooms from "./pages/classroom/Classrooms";
 import Classroom from "./pages/classroom/Classroom";
 import Attendances from "./pages/Attendances";
 import ClassWork from "./pages/classroom/classwork/ClassWork";
@@ -88,10 +88,10 @@ function App() {
                         <Route path={'/courses'} element={<Courses/>}/>
                         <Route path={'/routines/:id'} element={<RoutineViewer/>}/>
                         <Route path={'/routines'} element={<Routines/>}/>
-                        <Route path={'/classes'} element={<Classes/>}/>
                         <Route path={'/designations'} element={<Designations/>}/>
                         <Route path={'/semesters'} element={<Semesters />} />
                         <Route path={'/sessions'} element={<Sessions/>} />
+                        <Route path={'/c'} element={<Classrooms/>}/>
                         <Route path={'/c/:id'} element={<Classroom/>}>
                             <Route path={'/c/:id/att'} element={<Attendances/>}/>
                             <Route path={'/c/:id/w'} element={<ClassWork/>}/>
