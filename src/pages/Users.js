@@ -8,7 +8,7 @@ import {
     Dialog,
     DialogContent,
     FormControl,
-    FormHelperText,
+    FormHelperText, InputBase,
     InputLabel, MenuItem,
     OutlinedInput,
     Paper, Select, Stack, TextField, Typography,
@@ -25,8 +25,10 @@ import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
 import {DatePicker, MobileDatePicker} from "@mui/x-date-pickers";
 import moment from "moment";
 import {toast} from "react-toastify";
+import Search from '../components/Search'
 
 //TODO Current semester selectable for student add
+
 
 function Users(props) {
 
@@ -44,7 +46,9 @@ function Users(props) {
 
     let [showModal, setShowModal] = React.useState(false);
 
-    const navigate = useNavigate();
+    const [viewModal, setViewModal] = React.useState(false);
+
+    const [filterOption, setFilterOption] = React.useState({});
 
     //form
 
@@ -86,7 +90,10 @@ function Users(props) {
 
     let [semesters, setSemesters] = React.useState([]);
 
-    let [selectedSemester, setSelectedSemester] = React.useState("");
+    //for filtering
+
+    let [selectedSemester, setSelectedSemester] = React.useState('');
+    const [selectedDesignation, setSelectedDesignation] = React.useState('');
 
     //set delete dialog
 
@@ -104,43 +111,69 @@ function Users(props) {
             setLoading(true);
             if (type === 'student' && !semesters.length) {
                 let res = await axios.get('/semesters');
-                let {semesters} = res.data;
+                let semesters = res.data;
                 setSemesters(semesters);
             } else {
                 let res = await axios.get('/designations');
                 setDesignations(res.data);
             }
-            await fetchData('params', 1);
-            setLoading(false);
         }
+
+        setFilterOption({});
+        setSelectedDesignation('');
+        setSelectedSemester('');
 
         fetch();
 
     }, [type]);
 
-    const fetchData = async (reloadType, value) => {
+    const fetchData = async (page = 1) => {
 
-        let url = `/users?type=${type}&page=${value}`;
+        let params = {type: type};
+
+        params.page = 1;
+
+        if (filterOption) {
+            if (filterOption.hasOwnProperty('q')) {
+                params.q = filterOption.q;
+            }
+            if (filterOption.hasOwnProperty('semesterId')) {
+                params.semesterId = filterOption.semesterId;
+            }
+            if (filterOption.hasOwnProperty('designationId')) {
+                params.designationId = filterOption.designationId;
+            }
+        }
 
         try {
-            let res = await axios.get(url);
+            let res = await axios.get('/users', {params: params});
 
             let {data, pagination} = res.data;
 
             setUsers(data);
 
-            if (!paginationData || reloadType === 'params') {
-                setPaginationData(pagination);
-                setCurrentPage(1);
-            }
+            setPaginationData(pagination);
+
+            setCurrentPage(page);
+
         } catch (er) {
             console.log(er);
         }
     }
 
+    React.useEffect(() => {
+
+        console.log('fetch filter', filterOption);
+
+        fetchData().then(()=> {
+            setLoading(false);
+        });
+
+    }, [JSON.stringify(filterOption)])
+
 
     const onPageUpdate = (value) => {
-        fetchData("", value + 1);
+        fetchData(value + 1);
         setCurrentPage(value + 1);
     }
 
@@ -199,7 +232,6 @@ function Users(props) {
             reset({joiningDate: null});
         }
         setSelectedId(null);
-        setSelectedSemester('');
         setModalTitle(`Add ${type}`);
         setShowModal(true);
     }
@@ -231,6 +263,10 @@ function Users(props) {
 
     }
 
+    function selectAndOpenViewModal(item) {
+        //setSelected
+    }
+
     let columns = [{
         field: 'firstName',
         headerName: 'FirstName',
@@ -255,7 +291,7 @@ function Users(props) {
 
                 <GridActionsCellItem label={'View'}
                                      icon={<Visibility/>}
-                                     onClick={()=>navigate('/user/'+params.row.id)}
+                                     onClick={() => selectAndOpenViewModal(params.row)}
 
                 />,
 
@@ -276,14 +312,30 @@ function Users(props) {
 
     //data table
 
+    const searchUser = (value) => {
+        setFilterOption({...filterOption, q: value});
+    }
+
     if (loading) {
         return <div>loading...</div>
+    }
+
+    function onSemesterSelect(event) {
+        let value = event.target.value;
+        setSelectedSemester(value);
+        setFilterOption({...filterOption, semesterId: value});
+    }
+
+    function onSelectDesignation(event) {
+        let value = event.target.value;
+        setSelectedDesignation(value);
+        setFilterOption({...filterOption, designationId: value});
     }
 
     return (
         <LocalizationProvider dateAdapter={AdapterMoment}>
 
-            <Stack sx={{mb: 2}} direction={"row"} justifyContent={"space-between"}
+            <Stack sx={{my: 2}} direction={"row"} justifyContent={"space-between"}
                    alignItems={'center'}
             >
                 <Typography textTransform={'capitalize'} variant={'h3'} component={'div'}>
@@ -298,6 +350,40 @@ function Users(props) {
                 !loading &&
                 <>
                     <Paper sx={{height: '600px', width: '100%'}}>
+                        {
+                            //Filtering
+                        }
+                        <Box display={'flex'} justifyContent={'space-between'} alignItems={'center'}>
+                            <Search onInput={searchUser} placeholder={'Search User...'}
+
+                            />
+                            {type === 'student' ?
+                                <Select sx={{minWidth: '150px'}} onChange={onSemesterSelect}
+                                        placeholder={'select designation'}
+                                        value={selectedSemester}
+                                        displayEmpty={true}
+                                >
+                                    <MenuItem value={''}>All Semesters</MenuItem>
+                                    {semesters.map((sem, index) => (
+                                        <MenuItem key={index} value={sem.id}>{sem.shortName}</MenuItem>
+                                    ))}
+                                </Select>
+                                :
+                                <Select sx={{minWidth: '150px'}}
+                                        placeholder={'select designation'}
+                                        displayEmpty={true}
+                                        value={selectedDesignation}
+                                        onChange={onSelectDesignation}
+                                >
+                                    <MenuItem value={''}>All Designations</MenuItem>
+                                    {designations.map((designation, index) => (
+                                        <MenuItem key={index} value={designation.id}>{designation.name}</MenuItem>
+                                    ))}
+                                </Select>
+
+
+                            }
+                        </Box>
 
                         <DataGrid columns={columns}
                                   rows={users}
