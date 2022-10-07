@@ -4,6 +4,8 @@ import {Box, Card, CardContent, CardHeader, Grid, Typography} from "@mui/materia
 import {Link} from "react-router-dom";
 import {useNavigate} from 'react-router-dom'
 import ErrorWrapper from "../../components/ErrorWrapper";
+import RenderIfElse from "../../components/wrappers/RenderIfElse";
+import RenderIf from "../../components/wrappers/RenderIf";
 
 export default function Classrooms() {
 
@@ -42,46 +44,59 @@ export default function Classrooms() {
             <Box sx={{py: 2}}>
 
                 <Typography sx={{my: 2}} variant={'h4'}>Active Classes</Typography>
+                <RenderIfElse condition={classes.activeClasses.length}>
+                    <Grid container spacing={2}>
+                        {classes.activeClasses.map((cls) => (
 
-                <Grid container spacing={2}>
-                    {classes.activeClasses.map((cls) => (
+                            <Grid key={cls.id} item xs={12} sm={6} md={4}>
+                                <Link to={'/c/' + cls.id}>
+                                    <Card height={'100%'}>
+                                        <CardHeader sx={{bgcolor: 'primary.main', height: '100px'}}
+                                                    title={<Typography color={'whitesmoke'}
+                                                                       variant={'h4'}>{cls.courseName}</Typography>}/>
+                                        <CardContent>
+                                            <Typography variant={'h5'}>Course code: {cls.courseCode}</Typography>
+                                        </CardContent>
+                                    </Card>
+                                </Link>
+                            </Grid>
 
-                        <Grid key={cls.id} item xs={12} sm={6} md={4} >
-                            <Link to={'/c/' + cls.id}>
-                                <Card height={'100%'}>
-                                    <CardHeader sx={{bgcolor: 'primary.main', height: '100px'}} title={<Typography color={'whitesmoke'} variant={'h4'}>{cls.courseName}</Typography>}/>
-                                    <CardContent>
-                                        <Typography variant={'h5'}>Course code: {cls.courseCode}</Typography>
-                                    </CardContent>
-                                </Card>
-                            </Link>
-                        </Grid>
+                        ))}
+                    </Grid>
+                    <Card>
+                        <CardContent>No Active Classes</CardContent>
+                    </Card>
+                </RenderIfElse>
 
-                    ))}
-                </Grid>
             </Box>
 
-            <Box sx={{py: 2}}>
+            <RenderIf condition={classes.cls.length}>
+                <Box sx={{py: 2}}>
 
-                <Typography sx={{py: 1}} variant={'h4'}>Classes</Typography>
+                    <Typography sx={{py: 1}} variant={'h4'}>Classes</Typography>
 
-                <Grid container>
-                    {classes.cls.map((cls) => (
+                    <Grid container>
+                        {classes.cls.map((cls) => (
 
-                        <Grid key={cls.id} item xs={12} sm={6} md={4}>
-                            <Link to={'/c/' + cls.id}>
-                                <Card>
-                                    <CardHeader sx={{bgcolor: 'primary.main'}} title={<Typography color={'whitesmoke'} variant={'h4'}>{cls.courseName}</Typography>}/>
-                                    <CardContent>
-                                        <Typography variant={'h5'}>Course code: {cls.courseCode}</Typography>
-                                    </CardContent>
-                                </Card>
-                            </Link>
-                        </Grid>
+                            <Grid key={cls.id} item xs={12} sm={6} md={4}>
+                                <Link to={'/c/' + cls.id}>
+                                    <Card>
+                                        <CardHeader sx={{bgcolor: 'primary.main'}} title={<Typography color={'whitesmoke'}
+                                                                                                      variant={'h4'}>{cls.courseName}</Typography>}/>
+                                        <CardContent>
+                                            <Typography variant={'h5'}>Course code: {cls.courseCode}</Typography>
+                                        </CardContent>
+                                    </Card>
+                                </Link>
+                            </Grid>
 
-                    ))}
-                </Grid>
-            </Box>
+                        ))}
+                    </Grid>
+
+
+                </Box>
+            </RenderIf>
+
         </ErrorWrapper>
     )
 }
