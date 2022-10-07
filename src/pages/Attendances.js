@@ -10,7 +10,7 @@ import {
     TableCell,
     TableHead,
     TableRow,
-    TextField, Icon, TableContainer, Paper, Box, Typography, Stack, DialogTitle, Switch
+    TextField, Icon, TableContainer, Paper, Box, Typography, Stack, DialogTitle, Switch, Card, CardContent
 } from "@mui/material";
 import {CustomDialogTitle} from "../components/MuiCustom/CustomDialogTitle";
 import {DataGrid} from "@mui/x-data-grid";
@@ -19,8 +19,11 @@ import {AdapterMoment} from '@mui/x-date-pickers/AdapterMoment'
 import {DesktopDatePicker} from "@mui/x-date-pickers";
 import moment from "moment";
 import {groupBy, chain, uniqBy} from 'lodash'
-import {CheckCircle, Cancel} from '@mui/icons-material'
+import {CheckCircle, Cancel, Add} from '@mui/icons-material'
 import {toast} from "react-toastify";
+import RenderIfElse from "../components/wrappers/RenderIfElse";
+import RenderIf from "../components/wrappers/RenderIf";
+import {useSelector} from "react-redux";
 
 function Attendances() {
 
@@ -46,6 +49,10 @@ function Attendances() {
     const [openEditDialog, setOpenEditDialog] = React.useState(false);
     const [selectedAtt, setSelectedAtt] = React.useState(null);
     const [switchAtt, setSwitchAtt] = React.useState(false);
+
+    //get classroom user
+
+    const {user} = useSelector(state => state.classroom);
 
     //fetch class students
 
@@ -102,10 +109,10 @@ function Attendances() {
     const addAttendance = () => {
 
         const att = students.map(student => {
-            let item = {isAttendant: false};
+            let item = {isAttend: false};
 
             if (selectedStudents.includes(student.id)) {
-                item.isAttendant = true;
+                item.isAttend = true;
             }
 
             item.userId = student.id;
@@ -146,15 +153,15 @@ function Attendances() {
         setSwitchAtt(value);
 
         axios.put(`/c/${id}/att/${selectedAtt.id}`, {isAttend: value})
-            .then(res=> {
+            .then(res => {
 
                 let at = [...studentAttendances];
 
-                at.map(st=> {
-                    if(st.userId === selectedAtt.userId){
+                at.map(st => {
+                    if (st.userId === selectedAtt.userId) {
                         let {attendances} = st;
-                        console.log('attt', 'selected', selectedAtt,  'st', st);
-                        attendances.find(item=>item.id === selectedAtt.id).isAttend = value;
+                        console.log('attt', 'selected', selectedAtt, 'st', st);
+                        attendances.find(item => item.id === selectedAtt.id).isAttend = value;
                         st.attendances = attendances;
                     }
                     return st;
@@ -163,11 +170,11 @@ function Attendances() {
                 setStudentAttendances(at);
 
                 let {status} = res.data;
-                if(status === 'success'){
-                 toast.success('Updated');
+                if (status === 'success') {
+                    toast.success('Updated');
 
                 }
-            }).catch(er=>console.log(er));
+            }).catch(er => console.log(er));
 
     }
 
@@ -179,47 +186,57 @@ function Attendances() {
                 <Typography variant={'h4'}>
                     Attendances
                 </Typography>
-                <Button variant={'contained'} onClick={() => setOpenDialog(true)}>Add Attendance</Button>
+                <RenderIf condition={user.isMainTeacher}>
+                    <Button variant={'contained'}
+                            startIcon={<Add/>}
+                            onClick={() => setOpenDialog(true)}>Add Attendance</Button>
+                </RenderIf>
             </Stack>
 
-            <TableContainer sx={{maxHeight: 440}} component={Paper}>
+            <RenderIfElse condition={studentAttendances.length}>
+                <TableContainer sx={{maxHeight: 440}} component={Paper}>
+                    <Table stickyHeader={true}>
+                        <TableHead>
+                            <TableCell sx={{
+                                position: 'sticky',
+                                left: 0,
+                                background: 'white',
+                                zIndex: 10,
+                            }}>Name</TableCell>
+                            {dates.map((date) => (
+                                <TableCell>
+                                    {moment(date).format('DD-MM')}
+                                </TableCell>
+                            ))}
+                        </TableHead>
+                        <TableBody>
+                            {studentAttendances.map((student) => (
+                                <TableRow>
+                                    <TableCell sx={{
+                                        position: 'sticky',
+                                        left: 0,
+                                        background: 'white',
+                                        zIndex: 9,
+                                    }}>{`${student.name}(${student.studentId})`}</TableCell>
+                                    {student.attendances.map((att) => (
+                                        <TableCell sx={{writingMode: 'vertical'}}
+                                                   onClick={() => edit(student, att)}>{att.isAttend ?
+                                            <Icon color={'success'}> <CheckCircle/> </Icon> :
+                                            <Icon color={'error'}><Cancel/></Icon>}</TableCell>
+                                    ))}
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
 
+                </TableContainer>
+                <Card>
+                    <CardContent>
+                        No Attendances Yet
+                    </CardContent>
+                </Card>
+            </RenderIfElse>
 
-                <Table stickyHeader={true}>
-                    <TableHead>
-                        <TableCell sx={{
-                            position: 'sticky',
-                            left: 0,
-                            background: 'white',
-                            zIndex: 10,
-                        }}>Name</TableCell>
-                        {dates.map((date) => (
-                            <TableCell>
-                                {moment(date).format('DD-MM')}
-                            </TableCell>
-                        ))}
-                    </TableHead>
-                    <TableBody>
-                        {studentAttendances.map((student) => (
-                            <TableRow>
-                                <TableCell sx={{
-                                    position: 'sticky',
-                                    left: 0,
-                                    background: 'white',
-                                    zIndex: 9,
-                                }}>{`${student.name}(${student.studentId})`}</TableCell>
-                                {student.attendances.map((att) => (
-                                    <TableCell sx={{writingMode: 'vertical'}}
-                                               onClick={() => edit(student, att)}>{att.isAttend ?
-                                        <Icon color={'success'}> <CheckCircle/> </Icon> :
-                                        <Icon color={'error'}><Cancel/></Icon>}</TableCell>
-                                ))}
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-
-            </TableContainer>
 
             <Dialog open={openDialog}
                     onClose={() => setOpenDialog(false)}
