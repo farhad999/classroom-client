@@ -11,7 +11,7 @@ import {
     FormHelperText, InputBase,
     InputLabel, MenuItem,
     OutlinedInput,
-    Paper, Select, Stack, TextField, Typography,
+    Paper, Select, Stack, Table, TableCell, TableRow, TextField, Typography,
     useMediaQuery
 } from '@mui/material'
 import {CustomDialogTitle} from '../components/MuiCustom/CustomDialogTitle'
@@ -84,7 +84,7 @@ function Users(props) {
 
     //selected
 
-    let [selectedId, setSelectedId] = React.useState('');
+    let [selected, setSelected] = React.useState('');
 
     //for student only
 
@@ -122,8 +122,11 @@ function Users(props) {
         setFilterOption({});
         setSelectedDesignation('');
         setSelectedSemester('');
-
+        setLoading(true);
         fetch();
+        fetchData().then(() => {
+            setLoading(false);
+        });
 
     }, [type]);
 
@@ -163,11 +166,11 @@ function Users(props) {
 
     React.useEffect(() => {
 
-        console.log('fetch filter', filterOption);
-
-        fetchData().then(()=> {
-            setLoading(false);
-        });
+        if (filterOption) {
+            fetchData().then(() => {
+                setLoading(false);
+            });
+        }
 
     }, [JSON.stringify(filterOption)])
 
@@ -220,7 +223,7 @@ function Users(props) {
 
         reset(resetData);
 
-        setSelectedId(id);
+        setSelected(item);
 
         setModalTitle(`Update ${type}`);
 
@@ -231,7 +234,7 @@ function Users(props) {
         if (type !== 'student') {
             reset({joiningDate: null});
         }
-        setSelectedId(null);
+        setSelected(null);
         setModalTitle(`Add ${type}`);
         setShowModal(true);
     }
@@ -239,7 +242,7 @@ function Users(props) {
     //for delete
 
     const selectAndOpenAlert = (item) => {
-        setSelectedId(item.id);
+        setSelected(item);
         setShowAlertDialog(true);
     }
 
@@ -248,11 +251,11 @@ function Users(props) {
 
         try {
 
-            let res = await axios.delete(`users/${selectedId}`);
+            let res = await axios.delete(`users/${selected.id}`);
 
             let {status} = res.data;
             if (status === 'success') {
-                let filterUsers = users.filter(item => item.id !== selectedId);
+                let filterUsers = users.filter(item => item.id !== selected.id);
                 setUsers(filterUsers);
                 setShowAlertDialog(false);
             }
@@ -265,6 +268,8 @@ function Users(props) {
 
     function selectAndOpenViewModal(item) {
         //setSelected
+        setSelected(item);
+        setViewModal(true);
     }
 
     let columns = [{
@@ -319,6 +324,8 @@ function Users(props) {
     if (loading) {
         return <div>loading...</div>
     }
+
+    console.log('users', loading, users);
 
     function onSemesterSelect(event) {
         let value = event.target.value;
@@ -462,7 +469,7 @@ function Users(props) {
                             </FormHelperText>
                         </FormControl>
 
-                        {!selectedId &&
+                        {!selected &&
 
                             <FormControl
                                 fullWidth
@@ -624,6 +631,62 @@ function Users(props) {
                 description={"This item will be deleted"}
             >
             </AlertDialog>
+
+            {/* View User */}
+
+            <Dialog open={viewModal} onClose={() => setViewModal(false)}
+                    maxWidth={'sm'}
+                    fullWidth={true}
+            >
+                <CustomDialogTitle onClose={() => setViewModal(false)}>User Information</CustomDialogTitle>
+                <DialogContent>
+                    <Table>
+                        <TableRow>
+                            <TableCell>FirstName</TableCell>
+                            <TableCell>{selected.firstName}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell>LastName</TableCell>
+                            <TableCell>{selected.lastName}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell>Email</TableCell>
+                            <TableCell>{selected.email}</TableCell>
+                        </TableRow>
+
+                        {
+                            type === 'student' ?
+                                <React.Fragment>
+                                    <TableRow>
+                                        <TableCell>StudentId</TableCell>
+                                        <TableCell>{selected.studentId}</TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell>Current Semester</TableCell>
+                                        <TableCell>{selected.semesterName}</TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell>Session</TableCell>
+                                        <TableCell>{selected.session}</TableCell>
+                                    </TableRow>
+                                </React.Fragment>
+                                :
+                                <React.Fragment>
+                                    <TableRow>
+                                        <TableCell>Designation</TableCell>
+                                        <TableCell>{selected.designationName}</TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell>Joined Date</TableCell>
+                                        <TableCell>{moment(selected.joiningDate).format('DD MMM YYYY')}</TableCell>
+                                    </TableRow>
+                                </React.Fragment>
+
+                        }
+
+                    </Table>
+                </DialogContent>
+            </Dialog>
 
         </LocalizationProvider>
     )
