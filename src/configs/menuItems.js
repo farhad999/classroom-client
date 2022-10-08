@@ -71,6 +71,11 @@ export const menuItems = [
             }
         ]
     },
+    {
+      id: 'Classmates',
+      title: 'Classmates',
+      url: '/mates',
+    },
 
     {
       id: 'classrooms',

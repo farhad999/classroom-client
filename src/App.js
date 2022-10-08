@@ -42,6 +42,7 @@ import Conversation from "./pages/Conversation";
 import Designations from "./pages/Designations";
 import Semesters from "./pages/Semesters";
 import Sessions from "./pages/Sessions";
+import Classmates from "./pages/Classmates";
 
 function App() {
 
@@ -92,6 +93,8 @@ function App() {
                         <Route path={'/semesters'} element={<Semesters />} />
                         <Route path={'/sessions'} element={<Sessions/>} />
                         <Route path={'/c'} element={<Classrooms/>}/>
+                        <Route path={'/mates'} element={<Classmates /> } />
+
                         <Route path={'/c/:id'} element={<Classroom/>}>
                             <Route path={'/c/:id/att'} element={<Attendances/>}/>
                             <Route path={'/c/:id/w'} element={<ClassWork/>}/>
