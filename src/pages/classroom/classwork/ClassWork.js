@@ -1,27 +1,16 @@
 import React from 'react'
 import {
-    AppBar,
     Button,
-    Dialog,
-    IconButton,
-    Toolbar,
-    Typography,
-    Icon,
-    DialogContent,
-    Grid,
-    TextField, Card, Stack, CardContent, FormControl, InputLabel, OutlinedInput, FilledInput, Box
+    Typography, Card, CardContent, Box
 } from "@mui/material";
-import {Close, AssignmentOutlined, FileUploadOutlined} from '@mui/icons-material'
-import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
-import {AdapterMoment} from "@mui/x-date-pickers/AdapterMoment";
-import {DateTimePicker, DesktopDatePicker, DesktopDateTimePicker} from "@mui/x-date-pickers";
-import {useForm, Controller} from "react-hook-form";
-import FileUploader from "../../../components/FileUploader";
 import axios from "axios";
 import {useParams, Link} from "react-router-dom";
 import moment from "moment";
 import CreateOrUpdateAssignment from "../../../components/CreateOrUpdateAssignment";
 import {toast} from "react-toastify";
+import {useSelector} from "react-redux";
+import RenderIf from "../../../components/wrappers/RenderIf";
+import {Add} from "@mui/icons-material";
 
 function ClassWork(props) {
 
@@ -31,23 +20,13 @@ function ClassWork(props) {
 
     const [assignments, setAssignments] = React.useState([]);
 
-    //create assignment
+    //classroom user
 
-    const [uploads, setUploads] = React.useState([]);
-
-    //let ref
-
-    const uploadRef = React.useRef();
+    const {user} = useSelector(state => state.classroom);
 
     //classId
     const {id} = useParams();
 
-    const {control, handleSubmit} = useForm({
-        defaultValues: {
-            due: null,
-            points: '',
-        }
-    });
 
     const fetchAssignment = () => {
         axios.get(`/c/${id}/assignments`)
@@ -77,8 +56,14 @@ function ClassWork(props) {
 
     return (
         <div>
+            <Box my={3} display={'flex'} justifyContent={'space-between'} alignItems={'center'}>
+                <Typography variant={'h4'}>Classworks</Typography>
+                <RenderIf condition={user.isMainTeacher}>
+                    <Button startIcon={<Add />} variant={'contained'} onClick={() => setOpenDialog(true)}>Create</Button>
+                </RenderIf>
+            </Box>
 
-            <Button onClick={() => setOpenDialog(true)}>Create</Button>
+
 
             {assignments.map((assignment, index) => (
                 <Box key={'assign' + index} component={Link} to={`/c/${id}/w/${assignment.id}`}>
