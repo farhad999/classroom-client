@@ -62,7 +62,7 @@ function Users(props) {
             is: 'student',
             then: yup.string().required(),
         }),
-        session: yup.string().when('userType', {
+        sessionId: yup.string().when('userType', {
             is: 'student',
             then: yup.string().required(),
         }),
@@ -90,6 +90,8 @@ function Users(props) {
 
     let [semesters, setSemesters] = React.useState([]);
 
+    let [sessions, setSessions] = React.useState([]);
+
     //for filtering
 
     let [selectedSemester, setSelectedSemester] = React.useState('');
@@ -113,7 +115,11 @@ function Users(props) {
                 let res = await axios.get('/semesters');
                 let semesters = res.data;
                 setSemesters(semesters);
-            } else {
+                let response = await axios.get('/sessions');
+                setSessions(response.data);
+            }
+
+            else if(type=== 'teacher' || type==='stuff') {
                 let res = await axios.get('/designations');
                 setDesignations(res.data);
             }
@@ -212,8 +218,8 @@ function Users(props) {
         let resetData = {id, email, firstName, lastName};
 
         if (type === 'student') {
-            let {semesterId, session, studentId} = item;
-            resetData = {...resetData, semesterId, session, studentId}
+            let {semesterId, sessionId, studentId} = item;
+            resetData = {...resetData, semesterId, sessionId, studentId}
         } else {
             let {designationId, joiningDate} = item;
             resetData = {...resetData, designationId, joiningDate};
@@ -228,6 +234,8 @@ function Users(props) {
         setModalTitle(`Update ${type}`);
 
         setShowModal(true);
+
+        console.log('reset data', resetData);
     }
     //for add
     const resetAndOpenModal = () => {
@@ -324,8 +332,6 @@ function Users(props) {
     if (loading) {
         return <div>loading...</div>
     }
-
-    console.log('users', loading, users);
 
     function onSemesterSelect(event) {
         let value = event.target.value;
@@ -534,17 +540,20 @@ function Users(props) {
                                         </FormHelperText>
                                     </FormControl>
 
+
                                     <FormControl fullWidth margin={'normal'}>
                                         <InputLabel>Session</InputLabel>
-                                        <OutlinedInput
-                                            {...register('session')}
-                                            type="text"
-                                            name="session"
-                                            label="Session"
-
-                                        />
-                                        <FormHelperText error={!!errors?.session}>
-                                            {errors.session?.message}
+                                        <Controller render={({field})=> (
+                                            <Select label={'Session'}
+                                                    {...field}
+                                            >
+                                                {sessions.map((session, index)=> (
+                                                    <MenuItem key={'session'+index} value={session.id}>{session.name}</MenuItem>
+                                                ))}
+                                            </Select>
+                                        )} name={'sessionId'} control={control} />
+                                        <FormHelperText error={!!errors?.sessionId}>
+                                            {errors.sessionId?.message}
                                         </FormHelperText>
                                     </FormControl>
 
