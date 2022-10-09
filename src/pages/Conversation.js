@@ -2,11 +2,11 @@ import React from 'react'
 import {
     Box, Container, Divider, IconButton,
     Skeleton, Stack, TextField, Typography,
-    CircularProgress
+    CircularProgress, OutlinedInput, Icon
 } from "@mui/material";
 import {ArrowBack, ArrowForward, ArrowRight, MoreHoriz, Send} from "@mui/icons-material";
 import axios from "axios";
-import {useParams} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import MessageBubble from "../components/MessageBubble";
 import {useSelector} from "react-redux";
 import {nanoid} from "nanoid";
@@ -34,7 +34,13 @@ function Conversation() {
 
     const endBubbleRef = React.useRef(null);
 
+    const navigate = useNavigate();
+
     const sendMessage = () => {
+
+        if (!typedMessage.length) {
+            return;
+        }
 
         let message = {
             body: typedMessage,
@@ -158,7 +164,7 @@ function Conversation() {
                 <Stack py={1} direction={'row'} justifyContent={'space-between'}
                        alignItems={'center'}
                 >
-                    <IconButton>
+                    <IconButton onClick={() => navigate('/m')}>
                         <ArrowBack/>
                     </IconButton>
                     {loading ?
@@ -183,7 +189,7 @@ function Conversation() {
                 display: 'flex',
                 flexDirection: 'column-reverse',
                 px: 4,
-                py:2,
+                py: 2,
 
 
             }}>
@@ -223,13 +229,15 @@ function Conversation() {
             </Box>
 
             <Stack direction={'row'} alignItems={'center'} sx={{flex: '0 0 auto'}}>
-                <TextField label={'Type a message'}
-                           onKeyDown={detectKey}
-                           value={typedMessage}
-                           fullWidth={true}
-                           onChange={(event) => setTypedMessage(event.target.value)}
+                <OutlinedInput onKeyDown={detectKey}
+                               placeholder={'Message'}
+                               value={typedMessage}
+                               fullWidth={true}
+                               onChange={(event) => setTypedMessage(event.target.value)}
                 />
-                <IconButton onClick={sendMessage} disabled={!typedMessage.length}>
+                <IconButton onClick={sendMessage}
+                            color={'primary'}
+                            disabled={!typedMessage.length}>
                     <Send/>
                 </IconButton>
             </Stack>

@@ -1,7 +1,9 @@
 import React from 'react'
-import {Divider, Stack, Typography} from '@mui/material'
+import {Avatar, Box, Divider, Stack, Typography} from '@mui/material'
 import axios from "axios";
 import {Link} from 'react-router-dom'
+import {Groups as GroupIcon} from "@mui/icons-material";
+import moment from "moment";
 //import {socket} from "../utils/socket";
 
 function ChatList() {
@@ -25,11 +27,21 @@ function ChatList() {
 
     return (
         <div>
-            <Typography>Messages</Typography>
+            <Typography variant={'h4'}>Messages</Typography>
 
             {chats.map((chat) => (
                 <Link to={`/m/${chat.id}`}>
-                    {chat.name}
+                    <Box sx={{'&:hover': {
+                        backgroundColor: '#eee'
+                        }}} display={'flex'} alignItems={'center'} gap={1.5} py={1.5} my={1}>
+                        <Avatar>
+                            {chat.type === 'single' ? chat.receiverName.charAt(0).toUpperCase(): <GroupIcon />}
+                        </Avatar>
+                        <Box>
+                            <Typography variant={'h5'}>{chat.name ? chat.name : chat.receiverName}</Typography>
+                            <Typography>{moment(chat.lastMessageTime).fromNow()}</Typography>
+                        </Box>
+                    </Box>
                 </Link>
             ))}
 
