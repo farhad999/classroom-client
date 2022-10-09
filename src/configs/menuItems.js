@@ -68,6 +68,10 @@ export const menuItems = [
                 title: 'Sessions',
                 url: '/sessions',
                 ac: {role},
+            },{
+                id: 'promotion',
+                title: 'Promotion',
+                url: '/promotion',
             }
         ]
     },

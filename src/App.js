@@ -43,6 +43,7 @@ import Designations from "./pages/Designations";
 import Semesters from "./pages/Semesters";
 import Sessions from "./pages/Sessions";
 import Classmates from "./pages/Classmates";
+import Promotion from "./pages/Promotion";
 
 function App() {
 
@@ -90,10 +91,11 @@ function App() {
                         <Route path={'/routines/:id'} element={<RoutineViewer/>}/>
                         <Route path={'/routines'} element={<Routines/>}/>
                         <Route path={'/designations'} element={<Designations/>}/>
-                        <Route path={'/semesters'} element={<Semesters />} />
-                        <Route path={'/sessions'} element={<Sessions/>} />
+                        <Route path={'/semesters'} element={<Semesters/>}/>
+                        <Route path={'/sessions'} element={<Sessions/>}/>
                         <Route path={'/c'} element={<Classrooms/>}/>
-                        <Route path={'/mates'} element={<Classmates /> } />
+                        <Route path={'/mates'} element={<Classmates/>}/>
+                        <Route path={'/promotion'} element={<Promotion/>}/>
 
                         <Route path={'/c/:id'} element={<Classroom/>}>
                             <Route path={'/c/:id/att'} element={<Attendances/>}/>
